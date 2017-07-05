@@ -4,8 +4,9 @@ Date: July 2017
 
 File to convert and downsample .mkv files to .tiff
 
-Usage:
+Command Line Usage:
 
+cd /cygdrive/f/jflab-minipipe/
 python mkv2tiff.py /directory/of/videos/*.mkv -d 4
 '''
 
