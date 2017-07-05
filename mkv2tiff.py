@@ -4,10 +4,19 @@ from tqdm import tqdm
 import skimage
 import skimage.io
 
-def mkv2tiff(file_path, save_name, ds_factor=4):
-
+def mkv2tiff(file_path, ds_factor=4):
+    '''
+    Input: 
+        - file_path: path to mkv file
+        - ds_factor: factor to downsample by, default = 4, choose 1 for no 
+        downsampling
+    Output:
+        - NA, saves new downsampled and converted file to same path as original 
+        with '_ds' appended to end of filename.
+    '''
     print('Accessing Video')
     vid = pims.Video(file_path)
+    save_name = file_path + '_ds'
 
     dims = vid[0].shape
     vid_ds = np.zeros((int(len(vid)/ds_factor), dims[0], dims[1]))
