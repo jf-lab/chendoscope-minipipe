@@ -1,5 +1,5 @@
 '''
-Author: Andrew Mocle & Lina Tran
+Author: Andrew Mocle
 Date: July 13, 2017
 
 Motion correction within a single video file.
