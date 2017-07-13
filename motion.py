@@ -4,18 +4,17 @@ from scipy import signal
 from skimage import img_as_uint
 from sklearn.preprocessing import scale
 from skimage.transform import SimilarityTransform, warp
-from tqdm import tqdm
 
 
-def align_video(video, thresh=1.8, cutoff=0.05):
+def align_video(video, thresh=1.8, cutoff=0.05, target_frame=0):
 
     print('Filtering')
     video_spatial = spatial_lp_filter(video, 3, cutoff)
 
-    target = video_spatial[0,:,:]
+    target = video_spatialtarget_frame, :, :]
     video_reg = np.zeros_like(video)
 
-    for frame in tqdm(range(video.shape[0])):
+    for frame in range(video.shape[0]):
         tx, ty = align_frame(target, video[frame, :, :], thresh)
         video_reg[frame, :, :] = img_as_uint(translate(video[frame, :, :], -tx, -ty))
 
