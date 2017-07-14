@@ -33,10 +33,10 @@ def process_chunks(file_path, chunk_size=1000, ds_factor=4, correct_motion = Tru
 
         if correct_motion:
             video_chunk_reg = align_video(video_chunk_ds, reference, thresh, cutoff)
-            skimage.io.imsave(save_name + '_{}.tiff'.format(chunk), img_as_uint(video_chunk_reg/2**16))
+            skimage.io.imsave(save_name + '_temp_{}.tiff'.format(chunk), img_as_uint(video_chunk_reg/2**16))
 
         else:
-            skimage.io.imsave(save_name + '_{}.tiff'.format(chunk), img_as_uint(video_chunk_ds/2**16))
+            skimage.io.imsave(save_name + '_temp_{}.tiff'.format(chunk), img_as_uint(video_chunk_ds/2**16))
 
 
 def downsample(vid, ds_factor):
