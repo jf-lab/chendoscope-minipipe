@@ -20,6 +20,7 @@ $ python minipipe.py file1.mkv file2.mkv ... -d 4 -c 5000 --correct_motion -t 1.
 from pre_cnmfe import process_chunks
 import argparse
 from os import system
+import ntpath
 
 def get_args():
     parser = argparse.ArgumentParser(description='Convert and downsample .mkv files to .tiff')
@@ -37,10 +38,11 @@ def get_args():
 def main():
     args = get_args()
     for filename in args.input:
+        directory = os.path.dirname(filename)
         save_name = filename.replace('.mkv', '_proc')
         process_chunks(filename, args.chunk_size, args.downsample, args.correct_motion, args.threshold, 0.05, args.target_frame)
-        system("cat *_temp_*.tiff > {}.tiff".format(save_name))
-        system("rm *_temp_*")
+        system("cat {}*_temp_*.tiff > {}.tiff".format(directory, save_name))
+        system("rm {}*_temp_*".format(directory))
         print("Processing {}".format(filename))
 
 
