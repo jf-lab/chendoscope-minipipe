@@ -42,8 +42,8 @@ def main():
         print("Processing {}".format(filename))
         save_name = filename.replace('.mkv', '_proc')
         process_chunks(filename, args.chunk_size, args.downsample, args.correct_motion, args.threshold, 0.05, args.target_frame)
-        system("cat {}*_temp_*.tiff > {}.tiff".format(directory, save_name))
-        system("rm {}*_temp_*".format(directory))
+        system("cat {}/*_temp_*.tiff > {}.tiff".format(directory, save_name))
+        system("rm {}/*_temp_*".format(directory))
 
 
 if __name__ == '__main__':
