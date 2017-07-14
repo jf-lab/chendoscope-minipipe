@@ -1,22 +1,20 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import signal
-from skimage import img_as_uint
 from sklearn.preprocessing import scale
 from skimage.transform import SimilarityTransform, warp
 
 
-def align_video(video, thresh=1.8, cutoff=0.05, target_frame=0):
+def align_video(video, reference, thresh=1.8, cutoff=0.05):
 
-    print('Filtering')
     video_spatial = spatial_lp_filter(video, 3, cutoff)
+    reference_spatial = reference_lp_filter(reference, 3, cutoff)
 
-    target = video_spatialtarget_frame, :, :]
     video_reg = np.zeros_like(video)
 
     for frame in range(video.shape[0]):
-        tx, ty = align_frame(target, video[frame, :, :], thresh)
-        video_reg[frame, :, :] = img_as_uint(translate(video[frame, :, :], -tx, -ty))
+        tx, ty = align_frame(reference_spatial, video_spatial[frame, :, :], thresh)
+        video_reg[frame, :, :] = translate(video[frame, :, :], -tx, -ty)
 
     return video_reg
 
@@ -38,7 +36,7 @@ def translate(img, tx, ty):
 
     transf = SimilarityTransform(translation=[tx, ty])
 
-    return warp(img, transf)
+    return warp(img, transf, preserve_range=True)
 
 
 def spatial_lp_filter(video, order, Wn):
@@ -46,6 +44,16 @@ def spatial_lp_filter(video, order, Wn):
     b, a = signal.butter(order, Wn, btype='low')
     video_flt = signal.filtfilt(b, a, video, axis=1)
     video_flt = signal.filtfilt(b, a, video_flt, axis=2)
+    video_filtered = video_flt/np.amax(np.abs(video_flt))
+
+    return video_filtered
+
+
+def reference_lp_filter(video, order, Wn):
+
+    b, a = signal.butter(order, Wn, btype='low')
+    video_flt = signal.filtfilt(b, a, video, axis=0)
+    video_flt = signal.filtfilt(b, a, video_flt, axis=1)
     video_filtered = video_flt/np.amax(np.abs(video_flt))
 
     return video_filtered
