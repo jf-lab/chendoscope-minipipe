@@ -5,6 +5,12 @@ Date: July 14, 2017
 Pipeline using motion correction and pre_cnmfe to motion correct, downsample,
 and turn files into .tiffs
 
+Requirements:
+
+tiffcp
+    install tiffcp using:
+    $ apt-get install libtiff-tools
+
 Command Line Usage:
 
 $ python minipipe.py file1.mkv file2.mkv ... -d 4 -c 5000 --correct_motion -t 1.8
@@ -20,7 +26,6 @@ $ python minipipe.py file1.mkv file2.mkv ... -d 4 -c 5000 --correct_motion -t 1.
 from pre_cnmfe import process_chunks
 import argparse
 from os import system, path
-import ntpath
 
 def get_args():
     parser = argparse.ArgumentParser(description='Convert and downsample .mkv files to .tiff')
@@ -42,7 +47,7 @@ def main():
         print("Processing {}".format(filename))
         save_name = filename.replace('.mkv', '_proc')
         process_chunks(filename, args.chunk_size, args.downsample, args.correct_motion, args.threshold, 0.05, args.target_frame)
-        system("cat {}/*_temp_*.tiff > {}.tiff".format(directory, save_name))
+        system("tiffcp {}/*_temp_* > {}.tiff".format(directory, save_name))
         system("rm {}/*_temp_*".format(directory))
 
 
