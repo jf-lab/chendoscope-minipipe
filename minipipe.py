@@ -19,7 +19,7 @@ $ python minipipe.py file1.mkv file2.mkv ... -d 4 -c 5000 --correct_motion -t 1.
 
 from pre_cnmfe import process_chunks
 import argparse
-from os import system
+from os import system, path
 import ntpath
 
 def get_args():
