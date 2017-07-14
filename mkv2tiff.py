@@ -6,10 +6,12 @@ File to convert and downsample .mkv files to .tiff
 
 Command Line Usage:
 
-cd /cygdrive/f/jflab-minipipe/
-python mkv2tiff.py /directory/of/videos/*.mkv -d 4
-'''
+$ cd /cygdrive/f/jflab-minipipe/
+$ python mkv2tiff.py /directory/of/videos/*.mkv -d 4
 
+where -d provides the downsample factor
+
+'''
 import numpy as np
 import pims
 from tqdm import tqdm
