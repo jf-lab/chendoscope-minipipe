@@ -38,7 +38,7 @@ def main():
     args = get_args()
     for filename in args.input:
         save_name = filename.replace('.mkv', '_proc')
-        process_chunks(filename, args.chunk_size, args.downsample, args.correct_motion, args.threshold, args.target_frame)
+        process_chunks(filename, args.chunk_size, args.downsample, args.correct_motion, args.threshold, 0.05, args.target_frame)
         system("cat *_temp_*.tiff > {}.tiff".format(save_name))
         system("rm *_temp_*")
         print("Processing {}".format(filename))
