@@ -13,8 +13,8 @@ tiffcp
 
 Command Line Usage:
 
-$ python minipipe.py file1.mkv file2.mkv ... -d 4 -c 5000 --correct_motion -t 1.8
-    --target_frame 0
+$ python minipipe.py file1.mkv file2.mkv file3.mkv -d 4 -c 5000 --correct_motion
+    -t 1.8 --target_frame 0
 
 -d: downsample factor
 -c chunk_size
