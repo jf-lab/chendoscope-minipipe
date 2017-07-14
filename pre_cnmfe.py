@@ -27,6 +27,10 @@ def process_chunks(file_path, chunk_size=1000, ds_factor=4, correct_motion = Tru
         video_chunk = video[start:stop]
         video_chunk_ds = downsample(video_chunk, ds_factor)
 
+        #in order to have 01, 02 for file sorting and concatenation of chunks
+        if chunk < 10:
+            chunk = '0' + str(chunk)
+
         if correct_motion:
             video_chunk_reg = align_video(video_chunk_ds, reference, thresh, cutoff)
             skimage.io.imsave(save_name + '_{}.tiff'.format(chunk), img_as_uint(video_chunk_reg/2**16))
