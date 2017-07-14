@@ -41,7 +41,7 @@ def main():
         process_chunks(filename, args.chunk_size, args.downsample, args.correct_motion, args.threshold, args.target_frame)
         system("cat *_temp_*.tiff > {}.tiff".format(save_name))
         system("rm *_temp_*")
-        print "Processing {}".format(filename)
+        print("Processing {}".format(filename))
 
 
 if __name__ == '__main__':
