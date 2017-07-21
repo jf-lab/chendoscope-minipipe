@@ -35,7 +35,7 @@ def get_args():
     parser.add_argument('--motion_corr', dest='correct_motion', help='motion correct the given video', action='store_true')
     parser.add_argument('--no_motion_corr', dest='correct_motion', help='motion correct the given video', action='store_false')
     parser.set_defaults(correct_motion=True)
-    parser.add_argument('-t', '--threshold', help='threshold for moco, default is 1.8', type=float, default=1.8)
+    parser.add_argument('-t', '--threshold', help='threshold for moco, default is 1.8', type=float, default=1.0)
     parser.add_argument('--target_frame', help='target frame to reference, default is 0', type=int, default=0)
     return parser.parse_args()
 
