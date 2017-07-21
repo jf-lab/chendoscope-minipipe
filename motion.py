@@ -7,6 +7,7 @@ Motion correction within a single video file.
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import signal
+from tqdm import tqdm
 from sklearn.preprocessing import scale
 from skimage.transform import SimilarityTransform, warp
 
@@ -27,7 +28,7 @@ def align_video(video, reference, thresh=1.8, cutoff=0.05):
 
     video_reg = np.zeros_like(video)
 
-    for frame in range(video.shape[0]):
+    for frame in tqdm(range(video.shape[0]), desc='Correcting Motion'):
         tx, ty = align_frame(reference_spatial, video_spatial[frame, :, :], thresh)
         video_reg[frame, :, :] = translate(video[frame, :, :], -tx, -ty)
 
