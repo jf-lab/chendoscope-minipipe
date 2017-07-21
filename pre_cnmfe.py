@@ -51,7 +51,15 @@ def process_chunk(filename, start, stop, reference, save_name, ds_factor=4, corr
 
 
 def downsample(vid, ds_factor):
+    '''
+    Downsample video by ds_factor.
 
+    Input:
+        - vid: numpy array, video
+        - ds_factor: int, downsample factor
+    Output:
+        - vid_ds: numpy array, downsampled video
+    '''
     dims = vid[0].shape
     vid_ds = np.zeros((int(len(vid)/ds_factor), dims[0], dims[1]))
 

@@ -21,7 +21,10 @@ $ python minipipe.py file1.mkv file2.mkv file3.mkv -d 4 -c 5000 --correct_motion
 --correct_motion if you want to motion correct_motion
 -t if you want to indicate threshold
 -target_frame if you want to choose a frame other than the first to reference
+--cores number of threads to run in parallel
 '''
+
+
 from pre_cnmfe import process_chunk
 import argparse
 import pims
