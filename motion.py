@@ -21,7 +21,7 @@ def align_video(video, reference, thresh=1.8, cutoff=0.05):
         - cutoff: float, spatial frequency of cells to remove, default=0.05
         - reference: numpy array of dim(x,y) of reference image
     Output:
-        numpy array of registered video
+        - numpy array of registered video
     '''
     video_spatial = spatial_lp_filter(video, 3, cutoff)
     reference_spatial = reference_lp_filter(reference, 3, cutoff)

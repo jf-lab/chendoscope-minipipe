@@ -1,5 +1,14 @@
-import numpy as np
+'''
+Authors: Andrew Mocle and Lina Tran
+Date: July 10, 2017
+
+Pre-cnmf-e processing of videos in chunks:
+- Downsampling
+- Motion Correction
+
+'''
 import pims
+import numpy as np
 import math
 from tqdm import tqdm
 from skimage import img_as_uint
@@ -7,37 +16,38 @@ from motion import align_video
 import skimage.io
 
 
-def process_chunks(file_path, chunk_size=1000, ds_factor=4, correct_motion = True, thresh=1.8, cutoff=0.05, target_frame=0):
+def process_chunk(filename, start, stop, reference, save_name, ds_factor=4, correct_motion=True, thresh=1.8, cutoff=0.05):
+    '''
+    Process one chunk of a video read in from pims and save as .tiff
 
-    video = pims.Video(file_path)
-    reference = np.round(np.mean(np.array(video[0:ds_factor])[:,:,:,0], axis=0))
-    save_name = file_path.replace('.mkv', '_proc')
+    Input:
+        - filename: video path
+        - start: start frame
+        - stop: stop frame
+        - reference: reference frame
+        - ds_factor: int, downsample factor, default=4
+        - correct_motion: bool, correct motion, default=True
+        - thresh: flt, threshold for motion correction, default=1.0
+        - cutoff: flt, cutoff for motion correction, default=0.05
+    Output:
+        - None, saves processed chunk as a .tiff
+    '''
+    chunk = stop/(stop-start)
+    video = pims.Video(filename)
+    video_chunk = video[start:stop]
+    print("Processing frames {} to {} of {}".format(start, stop, len(video)))
 
-    for chunk in range(math.ceil(len(video)/chunk_size)):
+    video_chunk_ds = downsample(video_chunk, ds_factor)
+    #in order to have 01, 02 for file sorting and concatenation of chunks
+    if chunk < 10:
+        chunk = '0' + str(chunk)
 
-        print('Processing chunk {} of {}'.format(chunk+1, math.ceil(len(video)/chunk_size)))
+    if correct_motion:
+        video_chunk_reg = align_video(video_chunk_ds, reference, thresh, cutoff)
+        skimage.io.imsave(save_name + '_temp_{}.tiff'.format(chunk), img_as_uint(video_chunk_reg/2**16))
+    else:
+        skimage.io.imsave(save_name + '_temp_{}.tiff'.format(chunk), img_as_uint(video_chunk_ds/2**16))
 
-        start = chunk*chunk_size
-
-        if start + chunk_size < len(video):
-            stop = start + chunk_size
-
-        else:
-            stop = start + len(video) - chunk_size
-
-        video_chunk = video[start:stop]
-        video_chunk_ds = downsample(video_chunk, ds_factor)
-
-        #in order to have 01, 02 for file sorting and concatenation of chunks
-        if chunk < 10:
-            chunk = '0' + str(chunk)
-
-        if correct_motion:
-            video_chunk_reg = align_video(video_chunk_ds, reference, thresh, cutoff)
-            skimage.io.imsave(save_name + '_temp_{}.tiff'.format(chunk), img_as_uint(video_chunk_reg/2**16))
-
-        else:
-            skimage.io.imsave(save_name + '_temp_{}.tiff'.format(chunk), img_as_uint(video_chunk_ds/2**16))
 
 
 def downsample(vid, ds_factor):
