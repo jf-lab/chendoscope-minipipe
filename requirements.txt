@@ -1,0 +1,9 @@
+numpy==1.12.0
+scikit_image==0.13.dev0
+matplotlib==1.5.3
+scipy==0.18.1
+joblib==0.11
+pims==0.4
+skimage==0.0
+scikit_learn==0.19b2
+tqdm==4.14.0
