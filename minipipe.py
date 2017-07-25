@@ -57,18 +57,14 @@ if __name__ == '__main__':
         vid = pims.Video(filename)
         reference = np.round(np.mean(np.array(vid[args.target_frame:args.downsample])[:,:,:,0], axis=0))
         save_name = filename.replace('.mkv', '_proc')
-        process_chunks(filename, args.chunk_size, args.downsample, args.correct_motion, args.threshold, 0.05, args.target_frame)
-        if args.bigtiff:
-            system("tiffcp -8 {}/*_temp_* {}.tiff".format(directory, save_name))
-        else:
-            system("tiffcp {}/*_temp_* {}.tiff".format(directory, save_name))
-        system("rm {}/*_temp_*".format(directory))
-
 
         starts = np.arange(0,len(vid),args.chunk_size)
         stops = starts+args.chunk_size
         frames = list(zip(starts, stops))
 
         Parallel(n_jobs=args.cores)(delayed(process_chunk)(filename=filename, start=start, stop=stop, reference=reference, save_name=save_name, ds_factor=args.downsample, correct_motion=args.correct_motion, thresh=args.threshold) for start, stop in frames)
-        system("tiffcp {}/*_temp_* {}.tiff".format(directory, save_name))
+        if args.bigtiff:
+            system("tiffcp -8 {}/*_temp_* {}.tiff".format(directory, save_name))
+        else:
+            system("tiffcp {}/*_temp_* {}.tiff".format(directory, save_name))
         system("rm {}/*_temp_*".format(directory))
