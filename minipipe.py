@@ -57,15 +57,13 @@ if __name__ == '__main__':
         vid = pims.Video(filename)
         reference = np.round(np.mean(np.array(vid[args.target_frame:args.downsample])[:,:,:,0], axis=0))
         save_name = filename.replace('.mkv', '_proc')
-<<<<<<< HEAD
         process_chunks(filename, args.chunk_size, args.downsample, args.correct_motion, args.threshold, 0.05, args.target_frame)
         if args.bigtiff:
             system("tiffcp -8 {}/*_temp_* {}.tiff".format(directory, save_name))
         else:
             system("tiffcp {}/*_temp_* {}.tiff".format(directory, save_name))
         system("rm {}/*_temp_*".format(directory))
-=======
->>>>>>> fffe865933ae188d334bbc413a5a65a6212ffd15
+
 
         starts = np.arange(0,len(vid),args.chunk_size)
         stops = starts+args.chunk_size
