@@ -37,6 +37,8 @@ def get_args():
     parser.set_defaults(correct_motion=True)
     parser.add_argument('-t', '--threshold', help='threshold for moco, default is 1.0', type=float, default=1.0)
     parser.add_argument('--target_frame', help='target frame to reference, default is 0', type=int, default=0)
+    parser.add_argument('--bigtiff', dest='bigtiff', help='use bigtiff file format for large (>4Gb) .tiffs', action='store_true')
+    parser.set_defaults(bigtiff=False)
     return parser.parse_args()
 
 
@@ -47,7 +49,10 @@ def main():
         print("Processing {}".format(filename))
         save_name = filename.replace('.mkv', '_proc')
         process_chunks(filename, args.chunk_size, args.downsample, args.correct_motion, args.threshold, 0.05, args.target_frame)
-        system("tiffcp {}/*_temp_* {}.tiff".format(directory, save_name))
+        if args.bigtiff:
+            system("tiffcp -8 {}/*_temp_* {}.tiff".format(directory, save_name))
+        else:
+            system("tiffcp {}/*_temp_* {}.tiff".format(directory, save_name))
         system("rm {}/*_temp_*".format(directory))
 
 
