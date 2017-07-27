@@ -7,9 +7,13 @@ and turn files into .tiffs
 
 Requirements:
 
+mkvmerge
+    install mkvmerge using:
+    $ sudo apt-get install mkvtoolnix mkvtoolnix-gui
+
 tiffcp
     install tiffcp using:
-    $ apt-get install libtiff-tools
+    $ sudo apt-get install libtiff-tools
 
 Command Line Usage:
 
@@ -45,26 +49,42 @@ def get_args():
     parser.add_argument('--target_frame', help='target frame to reference, default is 0', type=int, default=0)
     parser.add_argument('--bigtiff', dest='bigtiff', help='use bigtiff file format for large (>4Gb) .tiffs', action='store_true')
     parser.set_defaults(bigtiff=False)
+    parser.add_argument('--merge', dest='merge', help='merge input files instead of serially processing', action='store_true')
+    parser.set_defaults(merge=False)
+    parser.add_argument('-o', '--output', help='if --merge, name of merged file', type=str)
     parser.add_argument('--cores', help='cores to use, default is 1', type=int, default=1)
     return parser.parse_args()
 
 
+def main(args, filename):
+    print("Processing {}".format(filename))
+    directory = path.dirname(filename)
+    vid = pims.Video(filename)
+    reference = np.round(np.mean(np.array(vid[args.target_frame:args.downsample])[:,:,:,0], axis=0))
+    save_name = filename.replace('.mkv', '_proc')
+
+    starts = np.arange(0,len(vid),args.chunk_size)
+    stops = starts+args.chunk_size
+    frames = list(zip(starts, stops))
+
+    Parallel(n_jobs=args.cores)(delayed(process_chunk)(filename=filename, start=start, stop=stop, reference=reference, save_name=save_name, ds_factor=args.downsample, correct_motion=args.correct_motion, thresh=args.threshold) for start, stop in frames)
+    if args.bigtiff:
+        system("tiffcp -8 {}/*_temp_* {}.tiff".format(directory, save_name))
+    else:
+        system("tiffcp {}/*_temp_* {}.tiff".format(directory, save_name))
+    system("rm {}/*_temp_*".format(directory))
+
+
 if __name__ == '__main__':
     args = get_args()
-    for filename in args.input:
-        print("Processing {}".format(filename))
-        directory = path.dirname(filename)
-        vid = pims.Video(filename)
-        reference = np.round(np.mean(np.array(vid[args.target_frame:args.downsample])[:,:,:,0], axis=0))
-        save_name = filename.replace('.mkv', '_proc')
-
-        starts = np.arange(0,len(vid),args.chunk_size)
-        stops = starts+args.chunk_size
-        frames = list(zip(starts, stops))
-
-        Parallel(n_jobs=args.cores)(delayed(process_chunk)(filename=filename, start=start, stop=stop, reference=reference, save_name=save_name, ds_factor=args.downsample, correct_motion=args.correct_motion, thresh=args.threshold) for start, stop in frames)
-        if args.bigtiff:
-            system("tiffcp -8 {}/*_temp_* {}.tiff".format(directory, save_name))
-        else:
-            system("tiffcp {}/*_temp_* {}.tiff".format(directory, save_name))
-        system("rm {}/*_temp_*".format(directory))
+    if args.merge:
+        assert args.output != None, "Please provide an output filename if using --merge"
+        directory = path.dirname(args.input[0])
+        args.output = directory + '/' + args.output
+        files = ' + '.join(args.input)
+        print(files)
+        system("mkvmerge -o {} {}".format(args.output, files))
+        main(args, args.output)
+    else:
+        for filename in args.input:
+            main(args, filename)
