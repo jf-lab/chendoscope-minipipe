@@ -1,6 +1,15 @@
 import numpy as np
+import argparse
+import scipy.io as sio
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Button
+
+
+def get_args():
+    parser = argparse.ArgumentParser(description='Review CNMF-E traces')
+    parser.add_argument('input', help='.mat output files to review')
+    return parser.parse_args()
+
 
 def review_traces(trace_array):
 
@@ -43,3 +52,9 @@ def review_traces(trace_array):
     plt.show()
 
     return traces_to_keep
+
+if __name__ == '__main__':
+    args = get_args()
+    data = sio.loadmat(args.input)
+    data['keep'] = review_traces(data['C_raw'])
+    sio.savemat(args.input, data)
