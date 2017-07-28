@@ -56,25 +56,6 @@ def get_args():
     return parser.parse_args()
 
 
-def main(args, filename):
-    print("Processing {}".format(filename))
-    directory = path.dirname(filename)
-    vid = pims.Video(filename)
-    reference = np.round(np.mean(np.array(vid[args.target_frame:args.downsample])[:,:,:,0], axis=0))
-    save_name = filename.replace('.mkv', '_proc')
-
-    starts = np.arange(0,len(vid),args.chunk_size)
-    stops = starts+args.chunk_size
-    frames = list(zip(starts, stops))
-
-    Parallel(n_jobs=args.cores)(delayed(process_chunk)(filename=filename, start=start, stop=stop, reference=reference, save_name=save_name, ds_factor=args.downsample, correct_motion=args.correct_motion, thresh=args.threshold) for start, stop in frames)
-    if args.bigtiff:
-        system("tiffcp -8 {}/*_temp_* {}.tiff".format(directory, save_name))
-    else:
-        system("tiffcp {}/*_temp_* {}.tiff".format(directory, save_name))
-    system("rm {}/*_temp_*".format(directory))
-
-
 if __name__ == '__main__':
     args = get_args()
     if args.merge:
@@ -84,7 +65,39 @@ if __name__ == '__main__':
         files = ' + '.join(args.input)
         print(files)
         system("mkvmerge -o {} {}".format(args.output, files))
-        main(args, args.output)
+        filename = args.output
+
+        print("Processing {}".format(filename))
+        directory = path.dirname(filename)
+        vid = pims.Video(filename)
+        reference = np.round(np.mean(np.array(vid[args.target_frame:args.downsample])[:,:,:,0], axis=0))
+        save_name = filename.replace('.mkv', '_proc')
+
+        starts = np.arange(0,len(vid),args.chunk_size)
+        stops = starts+args.chunk_size
+        frames = list(zip(starts, stops))
+
+        Parallel(n_jobs=args.cores)(delayed(process_chunk)(filename=filename, start=start, stop=stop, reference=reference, save_name=save_name, ds_factor=args.downsample, correct_motion=args.correct_motion, thresh=args.threshold) for start, stop in frames)
+        if args.bigtiff:
+            system("tiffcp -8 {}/*_temp_* {}.tiff".format(directory, save_name))
+        else:
+            system("tiffcp {}/*_temp_* {}.tiff".format(directory, save_name))
+        system("rm {}/*_temp_*".format(directory))
     else:
         for filename in args.input:
-            main(args, filename)
+            print("Processing {}".format(filename))
+            directory = path.dirname(filename)
+            vid = pims.Video(filename)
+            reference = np.round(np.mean(np.array(vid[args.target_frame:args.downsample])[:,:,:,0], axis=0))
+            save_name = filename.replace('.mkv', '_proc')
+
+            starts = np.arange(0,len(vid),args.chunk_size)
+            stops = starts+args.chunk_size
+            frames = list(zip(starts, stops))
+
+            Parallel(n_jobs=args.cores)(delayed(process_chunk)(filename=filename, start=start, stop=stop, reference=reference, save_name=save_name, ds_factor=args.downsample, correct_motion=args.correct_motion, thresh=args.threshold) for start, stop in frames)
+            if args.bigtiff:
+                system("tiffcp -8 {}/*_temp_* {}.tiff".format(directory, save_name))
+            else:
+                system("tiffcp {}/*_temp_* {}.tiff".format(directory, save_name))
+            system("rm {}/*_temp_*".format(directory))
