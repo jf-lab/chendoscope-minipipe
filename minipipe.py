@@ -18,14 +18,19 @@ tiffcp
 Command Line Usage:
 
 $ python minipipe.py file1.mkv file2.mkv file3.mkv -d 4 -c 5000 --correct_motion
-    -t 1.8 --target_frame 0 --cores 2
+    -t 1.8 --target_frame 0 --cores 2 --bigtiff --merge -o output.mkv
 
--d: downsample factor
--c chunk_size
---correct_motion if you want to motion correct_motion
--t if you want to indicate threshold
--target_frame if you want to choose a frame other than the first to reference
---cores number of threads to run in parallel
+Flags:
+-d/--downsample: downsample factor
+-c/--chunk_size: chunk_size
+--correct_motion: if you want to motion correct_motion
+-t/--threshold: if you want to indicate threshold
+-target_frame: if you want to choose a frame other than the first to reference
+--cores: number of threads to run in parallel
+--bigtiff: If .mkv(s) amount to > 12Gb, must use this mode or memory error will occur
+--merge: merge all the files instead of individually processing them
+-o/--output: If --merge, then the name for the merged .tiff file
+
 '''
 
 
