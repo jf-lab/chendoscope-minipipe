@@ -4,11 +4,11 @@ The JF-Lab miniature microscope pipeline for preprocessing and analysis.
 
 1. Get your .mkv files to be merged, downsampled and/or motion corrected.
 2. Run the following on the .mkv files:
-  `python minipipe.py file1.mkv file2.mkv -c 2000 --correct_motion --cores 8`
+  `python minipipe.py file1.mkv file2.mkv -c 2000 --motion_corr --cores 8`
   Flags:
   -d/--downsample: downsample factor
   -c/--chunk_size: chunk_size
-  --correct_motion: if you want to motion correct_motion
+  --motion_corr: if you want to motion correct_motion
   -t/--threshold: if you want to indicate threshold
   -target_frame: if you want to choose a frame other than the first to reference
   --cores: number of threads to run in parallel
