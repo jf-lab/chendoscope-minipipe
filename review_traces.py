@@ -1,3 +1,16 @@
+'''
+Author: Andrew Mocle
+Date July 27, 2017
+
+Review CNMF-E traces to keep or not.
+
+Command Line Usage:
+python review_traces.py traces.mat
+
+Go through each of the traces and choose keep or exclude.
+It will save to the .mat file a new dictionary entry for the kept traces.
+'''
+
 import numpy as np
 import argparse
 import scipy.io as sio
