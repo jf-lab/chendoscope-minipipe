@@ -16,4 +16,4 @@ The JF-Lab miniature microscope pipeline for preprocessing and analysis.
   --merge: merge all the files instead of individually processing them
   -o/--output: If --merge, then the name for the merged .tiff file
 3. Run [CNMF-E](https://github.com/zhoupc/CNMF_E) on the .tiff files.
-4. Use review_traces.py to manually inspect the neurons to keep or exclude from analysis. 
+4. Use review_traces.py to manually inspect the neurons to keep or exclude from analysis.
