@@ -1,41 +1,7 @@
 import numpy as np
+from tqdm import tqdm
 from skimage.transform import SimilarityTransform, warp, rotate, downscale_local_mean
 
-
-def mean_sq_diff(target, img):
-
-    return ((target-img)**2)[img > 0].mean()
-
-
-def corr(target, img):
-
-    coeff = np.corrcoef(target[img > 0].ravel(), img[img > 0].ravel())
-
-    return -coeff[0, 1]
-
-
-def transform(img, tx, ty, rot):
-
-    img_rot = rotate(img, rot, preserve_range=True)
-    transf = SimilarityTransform(translation=[tx, ty])
-
-    return warp(img_rot, transf)
-
-
-def transform_diff(target, img, tx, ty, rot):
-
-    img_transf = transform(img, tx, ty, rot)
-
-    return corr(target, img_transf)
-
-
-def propose_params(tx, ty, rot, sigma_t, sigma_r):
-
-    tx_prop = np.random.normal(tx, sigma_t)
-    ty_prop = np.random.normal(ty, sigma_t)
-    rot_prop = np.random.normal(rot, sigma_r)
-
-    return tx_prop, ty_prop, rot_prop
 
 def get_params(target, img, sigma_t, sigma_r, max_iteration):
 
@@ -43,8 +9,7 @@ def get_params(target, img, sigma_t, sigma_r, max_iteration):
     diff = transform_diff(target, img, tx, ty, rot)
     params_record = np.zeros((max_iteration, 4))
 
-    for it in range(max_iteration):
-
+    for it in tqdm(range(max_iteration), desc='Optimizing Transformation'):
         tx_p, ty_p, rot_p = propose_params(tx, ty, rot, sigma_t, sigma_r)
         diff_p = transform_diff(target, img, tx_p, ty_p, rot_p)
 
@@ -64,3 +29,39 @@ def get_params(target, img, sigma_t, sigma_r, max_iteration):
     img_trans = transform(img, tx, ty, rot)
 
     return img_trans, tx, ty, rot, params_record
+
+
+def mean_sq_diff(target, img):
+
+    return ((target-img)**2)[img > 0].mean()
+
+
+def corr(target, img):
+
+    coeff = np.corrcoef(target[img > 0].ravel(), img[img > 0].ravel())
+
+    return -coeff[0, 1]
+
+
+def transform(img, tx, ty, rot):
+
+    img_rot = rotate(img, rot, preserve_range=True)
+    transf = SimilarityTransform(translation=[tx, ty])
+
+    return warp(img_rot, transf, preserve_range=True)
+
+
+def transform_diff(target, img, tx, ty, rot):
+
+    img_transf = transform(img, tx, ty, rot)
+
+    return corr(target, img_transf)
+
+
+def propose_params(tx, ty, rot, sigma_t, sigma_r):
+
+    tx_prop = np.random.normal(tx, sigma_t)
+    ty_prop = np.random.normal(ty, sigma_t)
+    rot_prop = np.random.normal(rot, sigma_r)
+
+    return tx_prop, ty_prop, rot_prop
