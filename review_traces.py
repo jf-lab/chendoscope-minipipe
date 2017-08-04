@@ -24,13 +24,16 @@ def get_args():
     return parser.parse_args()
 
 
-def review_traces(trace_array):
+def review_traces(data):
 
     traces_to_keep = []
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(1,2)
     plt.subplots_adjust(bottom=0.2)
-    t = np.arange(0, trace_array.shape[1])
-    trace, = plt.plot(t, trace_array[0, :])
+    ds = data['spatial_ds_factor']
+    ax[0].matshow(data['A'][:,0].reshape(int(648/ds), int(486/ds)))
+    t = np.arange(0, data['C'].shape[1])
+    trace_C, = plt.plot(t, data['C'][0, :])
+    trace_Craw, = plt.plot(t, data['C_raw'][0, :])
 
     class Index(object):
         ind = 0
@@ -38,20 +41,26 @@ def review_traces(trace_array):
         def keep(self, event):
             traces_to_keep.append(self.ind)
             self.ind += 1
-            if self.ind >= trace_array.shape[0]:
+            if self.ind >= data['C'].shape[0]:
                 plt.close()
             else:
-                ydata = trace_array[self.ind, :]
-                trace.set_ydata(ydata)
+                ax[0].matshow(data['A'][:,self.ind].reshape(int(648/ds), int(486/ds)))
+                ydata = data['C'][self.ind, :]
+                trace_C.set_ydata(ydata)
+                ydata = data['C_raw'][self.ind, :]
+                trace_Craw.set_ydata(ydata)
                 plt.draw()
 
         def exclude(self, event):
             self.ind += 1
-            if self.ind >= trace_array.shape[0]:
+            if self.ind >= data['C'].shape[0]:
                 plt.close()
             else:
-                ydata = trace_array[self.ind, :]
-                trace.set_ydata(ydata)
+                ax[0].matshow(data['A'][:,self.ind].reshape(int(648/ds), int(486/ds)))
+                ydata = data['C'][self.ind, :]
+                trace_C.set_ydata(ydata)
+                ydata = data['C_raw'][self.ind, :]
+                trace_Craw.set_ydata(ydata)
                 plt.draw()
 
 
@@ -64,10 +73,10 @@ def review_traces(trace_array):
     bexclude.on_clicked(callback.exclude)
     plt.show()
 
-    return traces_to_keep
+    data['keep'] = traces_to_keep
 
 if __name__ == '__main__':
     args = get_args()
     data = sio.loadmat(args.input)
-    data['keep'] = review_traces(data['C_raw'])
+    review_traces(data)
     sio.savemat(args.input, data)
