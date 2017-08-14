@@ -1,6 +1,6 @@
-# jflab-minipipe
+# JF Lab Pipeline for Miniscope Analysis 
 
-The JF-Lab miniature microscope pipeline for preprocessing and analysis.
+The JF-Lab miniature microscope pipeline for preprocessing and analysis. 
 
 1. Get your .mkv files to be merged, downsampled and/or motion corrected.
 2. Run the following on the .mkv files:  
@@ -16,5 +16,5 @@ The JF-Lab miniature microscope pipeline for preprocessing and analysis.
   --bigtiff: If .mkv(s) amount to > 12Gb, must use this mode or memory error will occur  
   --merge: merge all the files instead of individually processing them  
   -o/--output: If --merge, then the name for the merged .tiff file  
-3. Run [CNMF-E](https://github.com/zhoupc/CNMF_E) on the .tiff files.
+3. Run [CNMF-E](https://github.com/zhoupc/CNMF_E) on the .tiff files.  
 4. Use review_traces.py to manually inspect the neurons to keep or exclude from analysis.
