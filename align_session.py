@@ -2,7 +2,11 @@ import numpy as np
 from scipy.ndimage.measurements import center_of_mass
 from scipy.spatial.distance import cdist
 
-def match_neurons(traces_1, traces_2, A_1, A_2, frame_siz=[324, 243]):
+def stitch_sessions():
+
+    return []
+
+def match_neurons(traces_1, traces_2, A_1, A_2, frame_siz=[324, 243], proximity=2):
 
     traces_match = np.array([]).reshape(0, traces_1.shape[1] + traces_2.shape[1])
     A_match = np.array([]).reshape(A_1.shape[0], 0)
@@ -12,14 +16,15 @@ def match_neurons(traces_1, traces_2, A_1, A_2, frame_siz=[324, 243]):
 
     distance = cdist(A_1_centroids, A_2_centroids)
     matched_1 = np.zeros(A_1.shape[1])
-    matched_2 = np.zeros(A_2.shape[1]) #matrix used for markiing if trace has been matched
-    match_range = np.sqrt(len(np.nonzero(A_1.ravel())[0])/A_1.shape[1])/4
+    matched_2 = np.zeros(A_2.shape[1]) #matrix used for marking if trace has been matched
+    match_range = np.sqrt(np.count_nonzero(A_1, axis=0))/proximity
+    print(match_range.shape)
 
     # Concatenate matched neurons
     for nn1 in range(A_1_centroids.shape[0]):
         for nn2 in range(A_2_centroids.shape[0]):
 
-            if distance[nn1, nn2] < match_range:
+            if distance[nn1, nn2] < match_range[nn1]:
 
                 if matched_2[nn2] == 1:
                     continue
