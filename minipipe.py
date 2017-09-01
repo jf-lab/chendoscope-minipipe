@@ -21,16 +21,15 @@ $ python minipipe.py file1.mkv file2.mkv file3.mkv -d 4 -c 5000 --correct_motion
     -t 1.8 --target_frame 0 --cores 2 --bigtiff --merge -o output.mkv
 
 Flags:
--d/--downsample: downsample factor
--c/--chunk_size: chunk_size
---correct_motion: if you want to motion correct_motion
--t/--threshold: if you want to indicate threshold
+-d/--downsample: downsample factor, default is 4 (typically 20fps -> 5fps)
+-c/--chunk_size: chunk_size, default is 2000
+--correct_motion: if you want to motion correct_motion, default is True
+-t/--threshold: if you want to indicate threshold, default is 1.0
 -target_frame: if you want to choose a frame other than the first to reference
---cores: number of threads to run in parallel
+--cores: number of threads to run in parallel, default is 4
 --bigtiff: If .mkv(s) amount to > 12Gb, must use this mode or memory error will occur
 --merge: merge all the files instead of individually processing them
 -o/--output: If --merge, then the name for the merged .tiff file
-
 '''
 
 
@@ -57,7 +56,7 @@ def get_args():
     parser.add_argument('--merge', dest='merge', help='merge input files instead of serially processing', action='store_true')
     parser.set_defaults(merge=False)
     parser.add_argument('-o', '--output', help='if --merge, name of merged file', type=str)
-    parser.add_argument('--cores', help='cores to use, default is 1', type=int, default=1)
+    parser.add_argument('--cores', help='cores to use, default is 1', type=int, default=4)
     return parser.parse_args()
 
 
