@@ -8,10 +8,18 @@ import argparse
 
 def cat_session(data_1, data_2, frame_siz=[324, 243], proximity=2):
 
-    data_cat = {}
-    data_cat['C'], data_cat['A'] = match_neurons(data_1['C'], data_2['C'], data_1['A'], data_2['A'], frame_siz, proximity)
-    data_cat['C_raw'], _ = match_neurons(data_1['C_raw'], data_2['C_raw'], data_1['A'], data_2['A'], frame_siz, proximity)
-    data_cat['S'], _ = match_neurons(data_1['S'], data_2['S'], data_1['A'], data_2['A'], frame_siz, proximity)
+    if 'keep' in data_1 and 'keep' in data_2:
+        data_cat = {}
+        keep_1, keep_2 = data_1['keep'][0], data_2['keep'][0]
+        data_cat['C'], data_cat['A'] = match_neurons(data_1['C'][keep_1, :], data_2['C'][keep_2, :], data_1['A'][:, keep_1], data_2['A'][:, keep_2], frame_siz, proximity)
+        data_cat['C_raw'], _ = match_neurons(data_1['C_raw'][keep_1, :], data_2['C_raw'][keep_2, :], data_1['A'][:, keep_1], data_2['A'][:, keep_2], frame_siz, proximity)
+        data_cat['S'], _ = match_neurons(data_1['S'][keep_1, :], data_2['S'][keep_2, :], data_1['A'][:, keep_1], data_2['A'][:, keep_2], frame_siz, proximity)
+
+    else:
+        data_cat = {}
+        data_cat['C'], data_cat['A'] = match_neurons(data_1['C'], data_2['C'], data_1['A'], data_2['A'], frame_siz, proximity)
+        data_cat['C_raw'], _ = match_neurons(data_1['C_raw'], data_2['C_raw'], data_1['A'], data_2['A'], frame_siz, proximity)
+        data_cat['S'], _ = match_neurons(data_1['S'], data_2['S'], data_1['A'], data_2['A'], frame_siz, proximity)
 
     return data_cat
 
@@ -95,6 +103,6 @@ if __name__ == '__main__':
         for file in range(2, len(args.input)):
             data = loadmat(args.input[file])
             data_cat = cat_session(data_cat, data)
-            
+
     data_cat['spatial_ds_factor'] = data_1['spatial_ds_factor']
     savemat(args.output + '.mat', data_cat)
