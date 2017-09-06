@@ -17,6 +17,7 @@ import scipy.io as sio
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from matplotlib.widgets import Button
+from scipy.sparse import issparse
 
 
 def get_args():
@@ -109,5 +110,9 @@ def review_traces(data):
 if __name__ == '__main__':
     args = get_args()
     data = sio.loadmat(args.input)
+
+    if issparse(data['A']):
+        data['A'] = np.array(data['A'].todense())
+
     review_traces(data)
     sio.savemat(args.input, data)
