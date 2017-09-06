@@ -1,12 +1,27 @@
 import numpy as np
+import matplotlib.pyplot as plt
+from scipy.io import loadmat, savemat
+from scipy.sparse import issparse
 from scipy.ndimage.measurements import center_of_mass
 from scipy.spatial.distance import cdist
+import argparse
 
-def stitch_sessions():
+def cat_session(data_1, data_2, frame_siz=[324, 243], proximity=2):
 
-    return []
+    data_cat = {}
+    data_cat['C'], data_cat['A'] = match_neurons(data_1['C'], data_2['C'], data_1['A'], data_2['A'], frame_siz, proximity)
+    data_cat['C_raw'], _ = match_neurons(data_1['C_raw'], data_2['C_raw'], data_1['A'], data_2['A'], frame_siz, proximity)
+    data_cat['S'], _ = match_neurons(data_1['S'], data_2['S'], data_1['A'], data_2['A'], frame_siz, proximity)
 
-def match_neurons(traces_1, traces_2, A_1, A_2, frame_siz=[324, 243], proximity=2):
+    return data_cat
+
+def match_neurons(traces_1, traces_2, A_1, A_2, frame_siz, proximity):
+
+    if issparse(A_1):
+        A_1 = np.array(A_1.todense())
+
+    if issparse(A_2):
+        A_2 = np.array(A_2.todense())
 
     traces_match = np.array([]).reshape(0, traces_1.shape[1] + traces_2.shape[1])
     A_match = np.array([]).reshape(A_1.shape[0], 0)
@@ -18,7 +33,6 @@ def match_neurons(traces_1, traces_2, A_1, A_2, frame_siz=[324, 243], proximity=
     matched_1 = np.zeros(A_1.shape[1])
     matched_2 = np.zeros(A_2.shape[1]) #matrix used for marking if trace has been matched
     match_range = np.sqrt(np.count_nonzero(A_1, axis=0))/proximity
-    print(match_range.shape)
 
     # Concatenate matched neurons
     for nn1 in range(A_1_centroids.shape[0]):
@@ -61,3 +75,26 @@ def get_centroids(A, frame_siz=[324, 243]):
         centroids[nn, :] = center_of_mass(roi)
 
     return centroids
+
+
+def get_args():
+    parser = argparse.ArgumentParser(description='Stitching Multiple Sessions')
+    parser.add_argument('input', help='ordered file names', nargs='+')
+    parser.add_argument('--output', help='output .mat file name', type=str)
+    return parser.parse_args()
+
+
+if __name__ == '__main__':
+    args = get_args()
+
+    data_1 = loadmat(args.input[0])
+    data_2 = loadmat(args.input[1])
+    data_cat = cat_session(data_1, data_2) # TODO add more optional arguments for command line later
+    data_cat['spatial_ds_factor'] = data_1['spatial_ds_factor']
+    if len(args.input) > 2:
+        for file in range(2, len(args.input)):
+            data = loadmat(args.input[file])
+            data_cat = cat_session(data_cat, data)
+            
+    data_cat['spatial_ds_factor'] = data_1['spatial_ds_factor']
+    savemat(args.output + '.mat', data_cat)
