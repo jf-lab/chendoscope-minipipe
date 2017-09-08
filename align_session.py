@@ -48,7 +48,7 @@ def match_neurons(traces_1, traces_2, A_1, A_2, frame_siz, proximity):
 
             if distance[nn1, nn2] < match_range[nn1]:
 
-                if matched_2[nn2] == 1:
+                if matched_1[nn1] == 1 or matched_2[nn2] == 1:
                     continue
 
                 trace_cat = np.concatenate((traces_1[nn1, :][None, :], traces_2[nn2, :][None, :]), axis=1)
