@@ -6,7 +6,7 @@ from scipy.ndimage.measurements import center_of_mass
 from scipy.spatial.distance import cdist
 import argparse
 
-def cat_session(data_1, data_2, frame_siz=[324, 243], proximity=2):
+def cat_session(data_1, data_2, frame_siz=[324, 243], proximity=1):
 
     if 'keep' in data_1 and 'keep' in data_2:
         data_cat = {}
@@ -98,11 +98,11 @@ if __name__ == '__main__':
     data_1 = loadmat(args.input[0])
     data_2 = loadmat(args.input[1])
     data_cat = cat_session(data_1, data_2) # TODO add more optional arguments for command line later
-    data_cat['spatial_ds_factor'] = data_1['spatial_ds_factor']
+    data_cat['ssub'] = data_1['ssub']
     if len(args.input) > 2:
         for file in range(2, len(args.input)):
             data = loadmat(args.input[file])
             data_cat = cat_session(data_cat, data)
 
-    data_cat['spatial_ds_factor'] = data_1['spatial_ds_factor']
+    data_cat['ssub'] = data_1['ssub']
     savemat(args.output + '.mat', data_cat)
