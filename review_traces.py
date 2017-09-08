@@ -29,7 +29,7 @@ def get_args():
 def review_traces(data):
 
     traces_to_keep = []
-    ds = data['spatial_ds_factor']
+    ds = data['ssub']
 
     fig = plt.figure()
     grid = gridspec.GridSpec(4,6)
