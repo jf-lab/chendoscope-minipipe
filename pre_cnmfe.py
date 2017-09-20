@@ -65,7 +65,7 @@ def downsample(vid, ds_factor):
 
     frame_ds = 0
     for frame in tqdm(range(0, len(vid), ds_factor), desc='Downsampling'):
-        if frame + ds_factor <= len(vid):
+        if frame + ds_factor < len(vid):
             stack = np.array(vid[frame:frame+ds_factor])[:,:,:,0]
             vid_ds[frame_ds, :, :] = np.round(np.mean(stack, axis=0))
             frame_ds += 1
