@@ -1,6 +1,9 @@
 import numpy as np
+import matplotlib.pyplot as plt
 from tqdm import tqdm
+import pims
 from skimage.transform import SimilarityTransform, warp, rotate, downscale_local_mean
+import argparse
 
 
 def get_params(target, img, sigma_t, sigma_r, max_iteration):
@@ -65,3 +68,30 @@ def propose_params(tx, ty, rot, sigma_t, sigma_r):
     rot_prop = np.random.normal(rot, sigma_r)
 
     return tx_prop, ty_prop, rot_prop
+
+def get_args():
+    parser = argparse.ArgumentParser(description='Testing MCMC alignment')
+    parser.add_argument('input', help='ordered file names', nargs='+')
+    return parser.parse_args()
+
+if __name__ == '__main__':
+    args=get_args()
+    print(args.input)
+    vid1 = pims.Video(args.input[0])
+    slice1 = np.array(vid1[:100])
+    img1 = np.round(np.mean(slice1, axis=0))
+    vid2 = pims.Video(args.input[1])
+    slice2 = np.array(vid2[:100])
+    img2 = np.round(np.mean(slice2, axis=0))
+
+    img_trans, tx, ty, rot, _ = get_params(img1, img2, 0.1, 0.1, 1000)
+
+    fig, axarr = plt.subplots(1,3, sharex=True, sharey=True)
+    axarr[0].matshow(img2)
+    axarr[0].set_title('Image')
+    axarr[1].matshow(img_trans)
+    axarr[1].set_title('Transformed')
+    axarr[2].matshow(img1)
+    axarr[2].set_title('Target')
+    plt.show()
+    print(tx, ty, rot)
