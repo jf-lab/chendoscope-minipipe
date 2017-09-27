@@ -6,24 +6,31 @@ from scipy.ndimage.measurements import center_of_mass
 from scipy.spatial.distance import cdist
 import argparse
 
-def cat_session(data_1, data_2, frame_siz=[324, 243], proximity=1):
+def cat_session(data_1, data_2, frame_siz=[324, 243], proximity=1, matches=None):
 
     if 'keep' in data_1 and 'keep' in data_2:
         data_cat = {}
         keep_1, keep_2 = data_1['keep'][0], data_2['keep'][0]
-        data_cat['C'], data_cat['A'] = match_neurons(data_1['C'][keep_1, :], data_2['C'][keep_2, :], data_1['A'][:, keep_1], data_2['A'][:, keep_2], frame_siz, proximity)
-        data_cat['C_raw'], _ = match_neurons(data_1['C_raw'][keep_1, :], data_2['C_raw'][keep_2, :], data_1['A'][:, keep_1], data_2['A'][:, keep_2], frame_siz, proximity)
-        data_cat['S'], _ = match_neurons(data_1['S'][keep_1, :], data_2['S'][keep_2, :], data_1['A'][:, keep_1], data_2['A'][:, keep_2], frame_siz, proximity)
+        data_cat['C'], data_cat['A'], data_cat['matches'] = match_neurons(data_1['C'][keep_1, :], data_2['C'][keep_2, :], data_1['A'][:, keep_1], data_2['A'][:, keep_2], frame_siz, proximity, matches)
+        data_cat['C_raw'], _, _ = match_neurons(data_1['C_raw'][keep_1, :], data_2['C_raw'][keep_2, :], data_1['A'][:, keep_1], data_2['A'][:, keep_2], frame_siz, proximity, matches)
+        data_cat['S'], _, _ = match_neurons(data_1['S'][keep_1, :], data_2['S'][keep_2, :], data_1['A'][:, keep_1], data_2['A'][:, keep_2], frame_siz, proximity, matches)
 
     else:
         data_cat = {}
-        data_cat['C'], data_cat['A'] = match_neurons(data_1['C'], data_2['C'], data_1['A'], data_2['A'], frame_siz, proximity)
-        data_cat['C_raw'], _ = match_neurons(data_1['C_raw'], data_2['C_raw'], data_1['A'], data_2['A'], frame_siz, proximity)
-        data_cat['S'], _ = match_neurons(data_1['S'], data_2['S'], data_1['A'], data_2['A'], frame_siz, proximity)
+        data_cat['C'], data_cat['A'], data_cat['matches'] = match_neurons(data_1['C'], data_2['C'], data_1['A'], data_2['A'], frame_siz, proximity, matches)
+        data_cat['C_raw'], _, _ = match_neurons(data_1['C_raw'], data_2['C_raw'], data_1['A'], data_2['A'], frame_siz, proximity, matches)
+        data_cat['S'], _, _ = match_neurons(data_1['S'], data_2['S'], data_1['A'], data_2['A'], frame_siz, proximity, matches)
 
     return data_cat
 
-def match_neurons(traces_1, traces_2, A_1, A_2, frame_siz, proximity):
+def match_neurons(traces_1, traces_2, A_1, A_2, frame_siz, proximity, matches=None):
+
+    if matches == None:
+        matches = np.multiply(np.ones((A_1.shape[1], 1)), np.arange(A_1.shape[1])[:, None])
+        matches = np.concatenate((matches, np.zeros((matches.shape[0], 1))*np.nan), axis=1)
+
+    else:
+        matches = np.concatenate((matches, np.zeros((matches.shape[0], 1))*np.nan), axis=1)
 
     if issparse(A_1):
         A_1 = np.array(A_1.todense())
@@ -48,7 +55,7 @@ def match_neurons(traces_1, traces_2, A_1, A_2, frame_siz, proximity):
 
             if distance[nn1, nn2] < match_range[nn1]:
 
-                if matched_1[nn1] == 1 or matched_2[nn2] == 1:
+                if matched_1[nn1] == 1 or matched_2[nn2] == 1 or np.isnan(matches[nn1, matches.shape[1]-2]):
                     continue
 
                 trace_cat = np.concatenate((traces_1[nn1, :][None, :], traces_2[nn2, :][None, :]), axis=1)
@@ -56,6 +63,8 @@ def match_neurons(traces_1, traces_2, A_1, A_2, frame_siz, proximity):
                 A_match = np.concatenate((A_match, A_2[:, nn2][:, None]), axis=1)
                 matched_1[nn1] = 1
                 matched_2[nn2] = 1
+                matches[nn1, matches.shape[1]-1] = nn2
+                # TODO add list of trace matches so you can look up in past A matrices
 
     # Add unmatched neurons from array 1 to bottom of matched arrays
     for nn1 in range(A_1_centroids.shape[0]):
@@ -71,7 +80,10 @@ def match_neurons(traces_1, traces_2, A_1, A_2, frame_siz, proximity):
             traces_match = np.concatenate((traces_match, trace_cat), axis=0)
             A_match = np.concatenate((A_match, A_2[:, nn2][:, None]), axis=1)
 
-    return traces_match, A_match
+            straggler = np.concatenate((np.ones((1, matches.shape[1]-1))*np.nan, nn2*np.ones((1,1))), axis=1)
+            matches = np.concatenate((matches, straggler), axis=0)
+
+    return traces_match, A_match, matches
 
 
 def get_centroids(A, frame_siz=[324, 243]):
@@ -102,7 +114,7 @@ if __name__ == '__main__':
     if len(args.input) > 2:
         for file in range(2, len(args.input)):
             data = loadmat(args.input[file])
-            data_cat = cat_session(data_cat, data)
+            data_cat = cat_session(data_cat, data, matches=data_cat['matches'])
 
     data_cat['ssub'] = data_1['ssub']
     savemat(args.output + '.mat', data_cat)
