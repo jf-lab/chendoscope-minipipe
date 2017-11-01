@@ -48,7 +48,7 @@ def get_args():
     parser.add_argument('-c', '--chunk_size', help='chunk_size of frames, default is 2000', type=int, default=2000)
     parser.add_argument('--motion_corr', dest='correct_motion', help='motion correct the given video', action='store_true')
     parser.add_argument('--no_motion_corr', dest='correct_motion', help='motion correct the given video', action='store_false')
-    parser.set_defaults(correct_motion=True)
+    parser.set_defaults(correct_motion=False)
     parser.add_argument('-t', '--threshold', help='threshold for moco, default is 1.0', type=float, default=1.0)
     parser.add_argument('--target_frame', help='target frame to reference, default is 0', type=int, default=0)
     parser.add_argument('--bigtiff', dest='bigtiff', help='use bigtiff file format for large (>4Gb) .tiffs', action='store_true')
@@ -67,6 +67,7 @@ if __name__ == '__main__':
         directory = path.dirname(args.input[0])
         args.output = directory + '/' + args.output
         files = ' + '.join(args.input)
+
         print(files)
         system("mkvmerge -o {} {}".format(args.output, files))
         filename = args.output
@@ -98,10 +99,10 @@ if __name__ == '__main__':
             starts = np.arange(0,len(vid),args.chunk_size)
             stops = starts+args.chunk_size
             frames = list(zip(starts, stops))
-
+            print(args.cores)
             Parallel(n_jobs=args.cores)(delayed(process_chunk)(filename=filename, start=start, stop=stop, reference=reference, save_name=save_name, ds_factor=args.downsample, correct_motion=args.correct_motion, thresh=args.threshold) for start, stop in frames)
             if args.bigtiff:
-                system("tiffcp -8 {}/*_temp_* {}.tiff".format(directory, save_name))
+                system("tiffcp -8 {}/*_temp_*.tiff {}.tiff".format(directory, save_name))
             else:
-                system("tiffcp {}/*_temp_* {}.tiff".format(directory, save_name))
-            system("rm {}/*_temp_*".format(directory))
+                system("tiffcp {}/*_temp_*.tiff {}.tiff".format(directory, save_name))
+            system("rm {}/*_temp_*.tiff".format(directory))
