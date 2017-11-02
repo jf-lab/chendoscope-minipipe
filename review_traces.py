@@ -33,7 +33,7 @@ def review_traces(data, fs, checkpoint_ind, keep):
 
     ind_c = checkpoint_ind
     traces_to_keep = keep
-    print(ind_c)
+
 
     check_ind = 0
     ds = data['ssub']
@@ -154,11 +154,9 @@ if __name__ == '__main__':
 
     print(args.checkpoint)
     if args.checkpoint:
-        print('fire')
         checkpoint_ind=data['checkpoint_ind'][0][0]
         keep = data['keep'][0].tolist()
     if not args.checkpoint:
-        print('x')
         checkpoint_ind=0
         keep = []
 
