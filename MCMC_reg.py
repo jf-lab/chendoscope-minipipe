@@ -2,8 +2,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import pims
+from skimage import img_as_uint
 from skimage.io import imsave
 from skimage.transform import SimilarityTransform, warp, rotate, downscale_local_mean
+from skimage.filters import laplace, sobel, scharr, median
+from scipy import signal
 import argparse
 
 
@@ -70,6 +73,12 @@ def propose_params(tx, ty, rot, sigma_t, sigma_r):
 
     return tx_prop, ty_prop, rot_prop
 
+def spatial_hp_filter(img, order, Wn):
+    b, a = signal.butter(order, Wn, btype='high')
+    img_filt = signal.filtfilt(b, a, img, axis=0)
+    img_filt = signal.filtfilt(b, a, img_filt, axis=1)
+    return img_as_uint(img_filt/img_filt.max())
+
 def get_args():
     parser = argparse.ArgumentParser(description='Testing MCMC alignment')
     parser.add_argument('input', help='ordered file names', nargs='+')
@@ -79,6 +88,8 @@ def get_args():
     parser.set_defaults(sigma_t=0.1)
     parser.add_argument('-r', '--sigma_r', type=float)
     parser.set_defaults(sigma_r=0.1)
+    parser.add_argument('-f', '--filter', action='store_true')
+    parser.add_argument('-c', '--cutoff', type=float)
     return parser.parse_args()
 
 if __name__ == '__main__':
@@ -91,9 +102,18 @@ if __name__ == '__main__':
     slice2 = np.array(vid2[:100])
     img2 = np.round(np.mean(slice2, axis=0))
 
+    if args.filter:
+        img1 = spatial_hp_filter(img1, 3, args.cutoff)
+        img2 = spatial_hp_filter(img2, 3, args.cutoff)
+        fig, axarr = plt.subplots(1,2, sharex=True, sharey=True)
+        axarr[0].matshow(img1)
+        axarr[1].matshow(img2)
+        plt.show()
+
     img_trans, tx, ty, rot, _ = get_params(img1, img2, args.sigma_t, args.sigma_r, args.iterations)
 
     fig, axarr = plt.subplots(1,3, sharex=True, sharey=True)
+
     axarr[0].matshow(img2)
     axarr[0].set_title('Image')
     axarr[1].matshow(img_trans)
