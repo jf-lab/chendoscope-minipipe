@@ -16,7 +16,7 @@ from motion import align_video
 import skimage.io
 
 
-def process_chunk(filename, start, stop, reference, save_name, ds_factor=4, correct_motion=True, thresh=1.8, cutoff=0.05):
+def process_chunk(filename, start, stop, reference, save_name, ds_factor=4, correct_motion=True, thresh=1.8, cutoff=0.05, clean_pixels=False, pixel_thresh=1.1):
     '''
     Process one chunk of a video read in from pims and save as .tiff
 
@@ -42,12 +42,13 @@ def process_chunk(filename, start, stop, reference, save_name, ds_factor=4, corr
     if chunk < 10:
         chunk = '0' + str(chunk)
 
-    if correct_motion:
-        video_chunk_reg = align_video(video_chunk_ds, reference, thresh, cutoff)
-        skimage.io.imsave(save_name + '_temp_{}.tiff'.format(chunk), img_as_uint(video_chunk_reg/2**16))
-    else:
-        skimage.io.imsave(save_name + '_temp_{}.tiff'.format(chunk), img_as_uint(video_chunk_ds/2**16))
+    if clean_pixels:
+        remove_dead_pixels(vid_ds, pixel_thresh)
 
+    if correct_motion:
+        video_chunk_ds = align_video(video_chunk_ds, reference, thresh, cutoff)
+
+    skimage.io.imsave(save_name + '_temp_{}.tiff'.format(chunk), img_as_uint(video_chunk_ds/2**16))
 
 
 def downsample(vid, ds_factor):
@@ -74,3 +75,12 @@ def downsample(vid, ds_factor):
             continue
 
     return vid_ds
+
+
+def remove_dead_pixels(vid, thresh=1.1):
+
+    for frame in tqdm(range(vid.shape[0]), desc='Removing Dead Pixels'):
+        med = skimage.filters.median(vid[frame, :, :], square(10)).ravel()
+        img = vid[frame, :, :].ravel()
+        img[img>thresh*med] = med[img>thresh*med]
+        vid[frame, :, :] = img.reshape(vid.shape[1], vid.shape[2])
