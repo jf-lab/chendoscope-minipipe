@@ -57,6 +57,9 @@ def get_args():
     parser.set_defaults(merge=False)
     parser.add_argument('-o', '--output', help='if --merge, name of merged file', type=str)
     parser.add_argument('--cores', help='cores to use, default is 1', type=int, default=4)
+    parser.add_argument('--remove_dead_pixels', action='store_true')
+    parser.set_defaults(remove_dead_pixels=False)
+    parser.add_argument('-p', '--pixel_thresh', type=float, default=1.1)
     return parser.parse_args()
 
 
@@ -100,7 +103,7 @@ if __name__ == '__main__':
             stops = starts+args.chunk_size
             frames = list(zip(starts, stops))
             print(args.cores)
-            Parallel(n_jobs=args.cores)(delayed(process_chunk)(filename=filename, start=start, stop=stop, reference=reference, save_name=save_name, ds_factor=args.downsample, correct_motion=args.correct_motion, thresh=args.threshold) for start, stop in frames)
+            Parallel(n_jobs=args.cores)(delayed(process_chunk)(filename=filename, start=start, stop=stop, reference=reference, save_name=save_name, ds_factor=args.downsample, correct_motion=args.correct_motion, thresh=args.threshold, clean_pixels=args.remove_dead_pixels, pixel_thresh=args.pixel_thresh) for start, stop in frames)
             if args.bigtiff:
                 system("tiffcp -8 {}/*_temp_*.tiff {}.tiff".format(directory, save_name))
             else:
