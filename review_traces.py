@@ -161,4 +161,4 @@ if __name__ == '__main__':
         keep = []
 
     review_traces(data, fs, checkpoint_ind, keep)
-    sio.savemat(args.input, data)
+    sio.savemat(args.input, data, do_compression=True)
