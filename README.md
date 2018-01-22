@@ -6,7 +6,7 @@ The JF-Lab miniature microscope pipeline for preprocessing and analysis.
 2. Run the following on the .mkv files:  
   `python minipipe.py file1.mkv file2.mkv -c 2000 --motion_corr --cores 8`  
   **Flags:**  
-  -d/--downsample: downsample factor, defaut=4  
+  -d/--downsample: temporal downsample factor, defaut=4  
   -c/--chunk_size: chunk_size, default=2000  
   --motion_corr: if you want to correct motion, default=False  
   -t/--threshold: if you want to indicate threshold for motion correction, default=1.0  
