@@ -8,7 +8,7 @@ The JF-Lab miniature microscope pipeline for preprocessing and analysis.
   **Flags:**  
   -d/--downsample: downsample factor, defaut=4  
   -c/--chunk_size: chunk_size, default=2000  
-  --motion_corr: if you want to motion correct_motion, default=True  
+  --motion_corr: if you want to correct motion, default=False  
   -t/--threshold: if you want to indicate threshold for motion correction, default=1.0  
   -target_frame: if you want to indicate frame of reference for motion correction, default=0    
   --cores: number of threads to run in parallel, default=4    
