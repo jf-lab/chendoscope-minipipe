@@ -78,7 +78,6 @@ def downsample(vid, ds_factor):
 
 
 def remove_dead_pixels(vid, thresh=1.1):
-
     for frame in tqdm(range(vid.shape[0]), desc='Removing Dead Pixels'):
         med = skimage.filters.median(vid[frame, :, :], square(10)).ravel()
         img = vid[frame, :, :].ravel()

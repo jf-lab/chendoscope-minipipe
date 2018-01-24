@@ -44,7 +44,7 @@ def review_traces(data, fs, checkpoint_ind, keep):
 
     # spatial footprint for each neuron
     ax = fig.add_subplot(grid[:, :2])
-    ax.matshow(data['A'][:,0].reshape(int(648/ds), int(486/ds)))
+    ax.matshow(data['A'][:,ind_c].reshape(int(648/ds), int(486/ds)))
 
     # raw and fitted traces
     t = np.arange(0, data['C'].shape[1])/fs[0,:]
