@@ -1,6 +1,6 @@
-# JF Lab Pipeline for Miniscope Analysis 
+# JF Lab Pipeline for CHEndoscope Analysis 
 
-The JF-Lab miniature microscope pipeline for preprocessing and analysis. 
+The JF-Lab pipeline for preprocessing and analysis of CHEndoscope calcium imaging data. 
 
 1. Get your .mkv files to be merged, downsampled and/or motion corrected.
 2. Run the following on the .mkv files:  
