@@ -14,6 +14,8 @@ from tqdm import tqdm
 from skimage import img_as_uint
 from motion import align_video
 import skimage.io
+import skimage.filters
+from skimage.morphology import square
 
 
 def process_chunk(filename, start, stop, reference, save_name, ds_factor=4, correct_motion=True, thresh=1.8, cutoff=0.05, clean_pixels=False, pixel_thresh=1.1):
@@ -43,7 +45,7 @@ def process_chunk(filename, start, stop, reference, save_name, ds_factor=4, corr
         chunk = '0' + str(chunk)
 
     if clean_pixels:
-        remove_dead_pixels(vid_ds, pixel_thresh)
+        remove_dead_pixels(video_chunk_ds, pixel_thresh)
 
     if correct_motion:
         video_chunk_ds = align_video(video_chunk_ds, reference, thresh, cutoff)
