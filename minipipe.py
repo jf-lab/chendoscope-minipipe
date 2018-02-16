@@ -52,7 +52,7 @@ def get_args():
     parser.add_argument('-t', '--threshold', help='threshold for moco, default is 1.0', type=float, default=1.0)
     parser.add_argument('--target_frame', help='target frame to reference, default is 0', type=int, default=0)
     parser.add_argument('--bigtiff', dest='bigtiff', help='use bigtiff file format for large (>4Gb) .tiffs', action='store_true')
-    parser.set_defaults(bigtiff=False)
+    parser.set_defaults(bigtiff=True)
     parser.add_argument('--merge', dest='merge', help='merge input files instead of serially processing', action='store_true')
     parser.set_defaults(merge=False)
     parser.add_argument('-o', '--output', help='if --merge, name of merged file', type=str)
