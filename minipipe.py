@@ -23,7 +23,7 @@ $ python minipipe.py file1.mkv file2.mkv file3.mkv -d 4 -c 5000 --correct_motion
 Flags:
 -d/--downsample: downsample factor, default is 4 (typically 20fps -> 5fps)
 -c/--chunk_size: chunk_size, default is 2000
---motion_corr: if you want to motion correct_motion, default is True
+--motion_corr: if you want to motion correct_motion, default is False
 -t/--threshold: if you want to indicate threshold, default is 1.0
 -target_frame: if you want to choose a frame other than the first to reference
 --cores: number of threads to run in parallel, default is 4

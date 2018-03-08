@@ -14,7 +14,6 @@ if __name__ == '__main__':
     for fname in tqdm(args.input):
         sname = fname.replace('.mat', '_keep.mat')
         data = loadmat(fname)
-
         keep = data['keep'].ravel()
         data['A'] = data['A'][:, keep]
         data['C_raw'] = data['C_raw'][keep, :]
