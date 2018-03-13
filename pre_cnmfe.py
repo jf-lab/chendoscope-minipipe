@@ -68,7 +68,10 @@ def downsample(vid, ds_factor):
 
     frame_ds = 0
     if ds_factor == 1:
-        pass
+        for frame in tqdm(range(0, len(vid)), desc='Converting'):
+            stack = np.array(vid[frame:frame+ds_factor])[:,:,:,0]
+            vid_ds[frame_ds, :, :] = stack
+            frame_ds += 1
     else:
         for frame in tqdm(range(0, len(vid), ds_factor), desc='Downsampling'):
             if frame + ds_factor < len(vid):
