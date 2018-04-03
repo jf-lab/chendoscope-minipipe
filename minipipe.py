@@ -81,6 +81,9 @@ if __name__ == '__main__':
         reference = np.round(np.mean(np.array(vid[args.target_frame:args.downsample])[:,:,:,0], axis=0))
         save_name = filename.replace('.mkv', '_proc')
 
+        if len(vid) % args.chunk_size < 10:
+            args.chunk_size += 5
+            
         starts = np.arange(0,len(vid),args.chunk_size)
         stops = starts+args.chunk_size
         frames = list(zip(starts, stops))
@@ -98,6 +101,9 @@ if __name__ == '__main__':
             vid = pims.Video(filename)
             reference = np.round(np.mean(np.array(vid[args.target_frame:args.downsample])[:,:,:,0], axis=0))
             save_name = filename.replace('.mkv', '_proc')
+
+            if len(vid) % args.chunk_size < 10:
+                args.chunk_size += 5
 
             starts = np.arange(0,len(vid),args.chunk_size)
             stops = starts+args.chunk_size
