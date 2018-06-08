@@ -14,6 +14,15 @@ mkvmerge
 tiffcp
     install tiffcp using:
     $ sudo apt-get install libtiff-tools
+    
+avimerge
+    install avimerge via transcode:
+    $ sudo apt-get install transcode
+
+dependencies for av
+    $ sudo apt-get install libavformat-dev libavcodec-dev libavdevice-dev libavutil-dev \ 
+    libswscale-dev libavresample-dev libavfilter-dev
+
 
 Command Line Usage:
 
