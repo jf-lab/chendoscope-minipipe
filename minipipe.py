@@ -14,6 +14,15 @@ mkvmerge
 tiffcp
     install tiffcp using:
     $ sudo apt-get install libtiff-tools
+    
+avimerge
+    install avimerge via transcode:
+    $ sudo apt-get install transcode
+
+dependencies for av
+    $ sudo apt-get install libavformat-dev libavcodec-dev libavdevice-dev libavutil-dev \ 
+    libswscale-dev libavresample-dev libavfilter-dev
+
 
 Command Line Usage:
 
@@ -56,6 +65,7 @@ def get_args():
     parser.add_argument('--merge', dest='merge', help='merge input files instead of serially processing', action='store_true')
     parser.set_defaults(merge=False)
     parser.add_argument('-o', '--output', help='if --merge, name of merged file', type=str)
+    parser.add_argument('-f', '--format', help='format of output file : tiff or avi', type=str, default='tiff')
     parser.add_argument('--cores', help='cores to use, default is 1', type=int, default=4)
     parser.add_argument('--remove_dead_pixels', action='store_true')
     parser.set_defaults(remove_dead_pixels=False)
@@ -77,7 +87,7 @@ if __name__ == '__main__':
 
         print("Processing {}".format(filename))
         directory = path.dirname(filename)
-        vid = pims.Video(filename)
+        vid = pims.ImageIOReader(filename)
         reference = np.round(np.mean(np.array(vid[args.target_frame:args.downsample])[:,:,:,0], axis=0))
         save_name = filename.replace('.mkv', '_proc')
 
@@ -88,17 +98,22 @@ if __name__ == '__main__':
         stops = starts+args.chunk_size
         frames = list(zip(starts, stops))
 
-        Parallel(n_jobs=args.cores)(delayed(process_chunk)(filename=filename, start=start, stop=stop, reference=reference, save_name=save_name, ds_factor=args.downsample, correct_motion=args.correct_motion, thresh=args.threshold) for start, stop in frames)
-        if args.bigtiff:
-            system("tiffcp -8 {}/*_temp_* {}.tiff".format(directory, save_name))
-        else:
-            system("tiffcp {}/*_temp_* {}.tiff".format(directory, save_name))
-        system("rm {}/*_temp_*".format(directory))
+        Parallel(n_jobs=args.cores)(delayed(process_chunk)(filename=filename, start=start, stop=stop, reference=reference, save_name=save_name, format=args.format, ds_factor=args.downsample, correct_motion=args.correct_motion, thresh=args.threshold) for start, stop in frames)
+        if args.format == 'tiff':
+            if args.bigtiff:
+                system("tiffcp -8 {}/*_temp_* {}.tiff".format(directory, save_name))
+            else:
+                system("tiffcp {}/*_temp_* {}.tiff".format(directory, save_name))
+            system("rm {}/*_temp_*".format(directory))
+        
+        elif args.format == 'avi':
+            system("avimerge -o {}.avi -i {}/*_temp_*.avi".format(save_name, directory))
+            system("rm {}/*_temp_*".format(directory))
     else:
         for filename in args.input:
             print("Processing {}".format(filename))
             directory = path.dirname(filename)
-            vid = pims.Video(filename)
+            vid = pims.ImageIOReader(filename)
             reference = np.round(np.mean(np.array(vid[args.target_frame:args.downsample])[:,:,:,0], axis=0))
             save_name = filename.replace('.mkv', '_proc')
 
@@ -109,9 +124,14 @@ if __name__ == '__main__':
             stops = starts+args.chunk_size
             frames = list(zip(starts, stops))
             print(args.cores)
-            Parallel(n_jobs=args.cores)(delayed(process_chunk)(filename=filename, start=start, stop=stop, reference=reference, save_name=save_name, ds_factor=args.downsample, correct_motion=args.correct_motion, thresh=args.threshold, clean_pixels=args.remove_dead_pixels, pixel_thresh=args.pixel_thresh) for start, stop in frames)
-            if args.bigtiff:
-                system("tiffcp -8 {}/*_temp_*.tiff {}.tiff".format(directory, save_name))
-            else:
-                system("tiffcp {}/*_temp_*.tiff {}.tiff".format(directory, save_name))
-            system("rm {}/*_temp_*.tiff".format(directory))
+            Parallel(n_jobs=args.cores)(delayed(process_chunk)(filename=filename, start=start, stop=stop, reference=reference, save_name=save_name, format=args.format, ds_factor=args.downsample, correct_motion=args.correct_motion, thresh=args.threshold, clean_pixels=args.remove_dead_pixels, pixel_thresh=args.pixel_thresh) for start, stop in frames)
+            if args.format == 'tiff':
+                if args.bigtiff:
+                    system("tiffcp -8 {}/*_temp_*.tiff {}.tiff".format(directory, save_name))
+                else:
+                    system("tiffcp {}/*_temp_*.tiff {}.tiff".format(directory, save_name))
+                system("rm {}/*_temp_*.tiff".format(directory))
+            
+            elif args.format == 'avi':
+                system("avimerge -o {}.avi -i {}/*_temp_*.avi".format(save_name, directory))
+                system("rm {}/*_temp_*".format(directory))

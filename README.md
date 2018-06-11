@@ -15,6 +15,7 @@ The JF-Lab pipeline for preprocessing and analysis of CHEndoscope calcium imagin
   --bigtiff: If .mkv(s) amount to > 12Gb, must use this mode or memory error will occur  
   --merge: merge all the files instead of individually processing them  
   -o/--output: If --merge, then the name for the merged .tiff file  
+  -f/--format: output format as tiff or avi, default is tiffs
 3. Run [CNMF-E](https://github.com/zhoupc/CNMF_E) on the .tiff files, output is a .mat file.  
 4. Use review_traces.py to manually inspect the neurons to keep or exclude from analysis:  
   `python review_traces.py traces.mat`

@@ -8,6 +8,7 @@ Pre-cnmf-e processing of videos in chunks:
 
 '''
 import pims
+import av
 import numpy as np
 import math
 from tqdm import tqdm
@@ -18,7 +19,7 @@ import skimage.filters
 from skimage.morphology import square
 
 
-def process_chunk(filename, start, stop, reference, save_name, ds_factor=4, correct_motion=True, thresh=1.8, cutoff=0.05, clean_pixels=False, pixel_thresh=1.1):
+def process_chunk(filename, start, stop, reference, save_name, ds_factor=4, correct_motion=True, thresh=1.8, cutoff=0.05, clean_pixels=False, pixel_thresh=1.1, format='tiff'):
     '''
     Process one chunk of a video read in from pims and save as .tiff
 
@@ -32,10 +33,11 @@ def process_chunk(filename, start, stop, reference, save_name, ds_factor=4, corr
         - thresh: flt, threshold for motion correction, default=1.0
         - cutoff: flt, cutoff for motion correction, default=0.05
     Output:
-        - None, saves processed chunk as a .tiff
+        - None, saves processed chunk as .tiff or .avi
     '''
     chunk = stop/(stop-start)
-    video = pims.Video(filename)
+    video = pims.ImageIOReader(filename)
+    frame_rate = video.frame_rate
     video_chunk = video[start:stop]
     print("Processing frames {} to {} of {}".format(start, stop, len(video)))
 
@@ -49,8 +51,11 @@ def process_chunk(filename, start, stop, reference, save_name, ds_factor=4, corr
 
     if correct_motion:
         video_chunk_ds = align_video(video_chunk_ds, reference, thresh, cutoff)
-
-    skimage.io.imsave(save_name + '_temp_{}.tiff'.format(chunk), img_as_uint(video_chunk_ds/2**16))
+    
+    if format == 'tiff':
+        skimage.io.imsave(save_name + '_temp_{}.tiff'.format(chunk), img_as_uint(video_chunk_ds/2**16))
+    elif format == 'avi':
+        save_to_avi(video_chunk_ds, fps = frame_rate / ds_factor, filename = save_name + '_temp_{}.avi'.format(chunk))
 
 
 def downsample(vid, ds_factor):
@@ -85,3 +90,28 @@ def remove_dead_pixels(vid, thresh=1.1):
         img = vid[frame, :, :].ravel()
         img[img>thresh*med] = med[img>thresh*med]
         vid[frame, :, :] = img.reshape(vid.shape[1], vid.shape[2])
+
+def save_to_avi(vid, fps, filename):
+    
+    total_frames, height, width = vid.shape
+    container = av.open(filename, 'w')
+    stream = container.add_stream('mpeg4', rate=fps) # example vid from miniscopy uses palettize codec
+    stream.height = height
+    stream.width = width
+    
+    for frame in vid:
+        # Convert frame to RGB uint8 values
+        frame = frame.astype('uint8')
+        frame = np.repeat(np.reshape(frame, newshape=(frame.shape[0], frame.shape[1], 1)), repeats=3, axis=2)
+        
+        # Encode frame into stream
+        frame = av.VideoFrame.from_ndarray(frame, format='rgb24')
+        for packet in stream.encode(frame):
+            container.mux(packet)
+    
+    # Flush Stream
+    for packet in stream.encode():
+        container.mux(packet)
+
+    # Close file
+    container.close()
