@@ -95,9 +95,10 @@ def save_to_avi(vid, fps, filename):
     
     total_frames, height, width = vid.shape
     container = av.open(filename, 'w')
-    stream = container.add_stream('mpeg4', rate=fps) # example vid from miniscopy uses palettize codec
+    stream = container.add_stream('rawvideo', rate=fps) # example vid from miniscopy uses palettize codec
     stream.height = height
     stream.width = width
+    stream.pix_fmt = 'bgr24'
     
     for frame in vid:
         # Convert frame to RGB uint8 values
@@ -105,7 +106,7 @@ def save_to_avi(vid, fps, filename):
         frame = np.repeat(np.reshape(frame, newshape=(frame.shape[0], frame.shape[1], 1)), repeats=3, axis=2)
         
         # Encode frame into stream
-        frame = av.VideoFrame.from_ndarray(frame, format='rgb24')
+        frame = av.VideoFrame.from_ndarray(frame, format='bgr24')
         for packet in stream.encode(frame):
             container.mux(packet)
     
