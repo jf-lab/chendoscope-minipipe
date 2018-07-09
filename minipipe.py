@@ -133,7 +133,9 @@ if __name__ == '__main__':
             stops = starts+args.chunk_size
             frames = list(zip(starts, stops))
             print(args.cores)
+
             Parallel(n_jobs=args.cores)(delayed(process_chunk)(filename=filename, start=start, stop=stop, xlims=xlims, ylims=ylims, reference=reference, save_name=save_name, format=args.format, ds_factor=args.downsample, correct_motion=args.correct_motion, thresh=args.threshold, clean_pixels=args.remove_dead_pixels, pixel_thresh=args.pixel_thresh) for start, stop in frames)
+
             if args.format == 'tiff':
                 if args.bigtiff:
                     system("tiffcp -8 {}/*_temp_*.tiff {}.tiff".format(directory, save_name))

@@ -57,7 +57,6 @@ def process_chunk(filename, start, stop, reference, xlims, ylims, save_name, ds_
     elif format == 'avi':
         save_to_avi(video_chunk_ds, fps = frame_rate / ds_factor, filename = save_name + '_temp_{}.avi'.format(chunk))
 
-
 def downsample(vid, ds_factor, xlims=None, ylims=None):
     '''
     Downsample video by ds_factor.
@@ -170,6 +169,7 @@ def save_to_avi(vid, fps, filename):
         frame = np.repeat(np.reshape(frame, newshape=(frame.shape[0], frame.shape[1], 1)), repeats=3, axis=2)
         
         # Encode frame into stream
+
         frame = av.VideoFrame.from_ndarray(frame, format='bgr24')
         for packet in stream.encode(frame):
             container.mux(packet)
