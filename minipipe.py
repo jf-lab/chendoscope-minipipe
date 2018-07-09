@@ -42,7 +42,7 @@ Flags:
 '''
 
 
-from pre_cnmfe import process_chunk
+from pre_cnmfe import process_chunk, get_crop_lims
 import argparse
 import pims
 import numpy as np
@@ -67,6 +67,9 @@ def get_args():
     parser.add_argument('-o', '--output', help='if --merge, name of merged file', type=str)
     parser.add_argument('-f', '--format', help='format of output file : tiff or avi', type=str, default='tiff')
     parser.add_argument('--cores', help='cores to use, default is 1', type=int, default=4)
+    parser.add_argument('--crop', dest='crop', action='store_true')
+    parser.add_argument('-ct', '--crop_thresh', dest='crop_thresh', type=int, default=40)
+    parser.set_defaults(crop=False)
     parser.add_argument('--remove_dead_pixels', action='store_true')
     parser.set_defaults(remove_dead_pixels=False)
     parser.add_argument('-p', '--pixel_thresh', type=float, default=1.1)
@@ -116,6 +119,12 @@ if __name__ == '__main__':
             vid = pims.ImageIOReader(filename)
             reference = np.round(np.mean(np.array(vid[args.target_frame:args.downsample])[:,:,:,0], axis=0))
             save_name = filename.replace('.mkv', '_proc')
+            
+            if args.crop:
+                xlims, ylims = get_crop_lims(vid, crop_thresh=args.crop_thresh)
+            else:
+                xlims = None
+                ylims = None
 
             if len(vid) % args.chunk_size < 10:
                 args.chunk_size += 5
@@ -124,7 +133,7 @@ if __name__ == '__main__':
             stops = starts+args.chunk_size
             frames = list(zip(starts, stops))
             print(args.cores)
-            Parallel(n_jobs=args.cores)(delayed(process_chunk)(filename=filename, start=start, stop=stop, reference=reference, save_name=save_name, format=args.format, ds_factor=args.downsample, correct_motion=args.correct_motion, thresh=args.threshold, clean_pixels=args.remove_dead_pixels, pixel_thresh=args.pixel_thresh) for start, stop in frames)
+            Parallel(n_jobs=args.cores)(delayed(process_chunk)(filename=filename, start=start, stop=stop, xlims=xlims, ylims=ylims, reference=reference, save_name=save_name, format=args.format, ds_factor=args.downsample, correct_motion=args.correct_motion, thresh=args.threshold, clean_pixels=args.remove_dead_pixels, pixel_thresh=args.pixel_thresh) for start, stop in frames)
             if args.format == 'tiff':
                 if args.bigtiff:
                     system("tiffcp -8 {}/*_temp_*.tiff {}.tiff".format(directory, save_name))
