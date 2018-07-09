@@ -7,3 +7,4 @@ pims==0.4
 skimage==0.0
 scikit_learn==0.19b2
 tqdm==4.14.0
+av==0.4.0
