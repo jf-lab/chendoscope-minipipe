@@ -53,6 +53,7 @@ from joblib import Parallel, delayed
 def get_args():
     parser = argparse.ArgumentParser(description='Convert and downsample .mkv files to .tiff')
     parser.add_argument('input', help='files', nargs='+')
+    parser.add_argument('--fps', dest = 'fps', help='Frames per second', default=20)
     parser.add_argument('-d', '--downsample', help='downsample factor, default is 4', type=int, default=4)
     parser.add_argument('-c', '--chunk_size', help='chunk_size of frames, default is 2000', type=int, default=2000)
     parser.add_argument('--motion_corr', dest='correct_motion', help='motion correct the given video', action='store_true')
@@ -134,7 +135,7 @@ if __name__ == '__main__':
             frames = list(zip(starts, stops))
             print(args.cores)
 
-            Parallel(n_jobs=args.cores)(delayed(process_chunk)(filename=filename, start=start, stop=stop, xlims=xlims, ylims=ylims, reference=reference, save_name=save_name, format=args.format, ds_factor=args.downsample, correct_motion=args.correct_motion, thresh=args.threshold, clean_pixels=args.remove_dead_pixels, pixel_thresh=args.pixel_thresh) for start, stop in frames)
+            Parallel(n_jobs=args.cores)(delayed(process_chunk)(filename=filename, start=start, stop=stop, xlims=xlims, ylims=ylims, fps=args.fps, reference=reference, save_name=save_name, format=args.format, ds_factor=args.downsample, correct_motion=args.correct_motion, thresh=args.threshold, clean_pixels=args.remove_dead_pixels, pixel_thresh=args.pixel_thresh) for start, stop in frames)
 
             if args.format == 'tiff':
                 if args.bigtiff:

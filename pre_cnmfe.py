@@ -19,7 +19,7 @@ import skimage.filters
 from skimage.morphology import square
 
 
-def process_chunk(filename, start, stop, reference, xlims, ylims, save_name, ds_factor=4, correct_motion=True, thresh=1.8, cutoff=0.05, clean_pixels=False, pixel_thresh=1.1, format='tiff'):
+def process_chunk(filename, start, stop, reference, save_name, xlims = None, ylims = None, fps= 20, ds_factor=4, correct_motion=True, thresh=1.8, cutoff=0.05, clean_pixels=False, pixel_thresh=1.1, format='tiff'):
     '''
     Process one chunk of a video read in from pims and save as .tiff
 
@@ -28,16 +28,20 @@ def process_chunk(filename, start, stop, reference, xlims, ylims, save_name, ds_
         - start: start frame
         - stop: stop frame
         - reference: reference frame
+        - xlims: tuple of 2 ints, crop limits on x-axis
+        - ylims: tuple of 2 ints, crop limits on y-axis
+        - fps: int, output frames per second
         - ds_factor: int, downsample factor, default=4
         - correct_motion: bool, correct motion, default=True
         - thresh: flt, threshold for motion correction, default=1.0
         - cutoff: flt, cutoff for motion correction, default=0.05
+        - format: string, 'tiff' or 'avi'
     Output:
         - None, saves processed chunk as .tiff or .avi
     '''
     chunk = stop/(stop-start)
     video = pims.ImageIOReader(filename)
-    frame_rate = video.frame_rate
+    frame_rate = fps,  # video.frame_rate
     video_chunk = video[start:stop]
     print("Processing frames {} to {} of {}".format(start, stop, len(video)))
 
@@ -92,7 +96,7 @@ def downsample(vid, ds_factor, xlims=None, ylims=None):
 
     frame_ds = 0
     for frame in tqdm(range(0, len(vid), ds_factor), desc='Downsampling'):
-        if frame + ds_factor < len(vid):
+        if frame + ds_factor <= len(vid):
             stack = np.array(vid[frame:frame+ds_factor])[:,ys:ye,xs:xe,0]
             vid_ds[frame_ds, :, :] = np.round(np.mean(stack, axis=0))
             frame_ds += 1
@@ -122,7 +126,6 @@ def get_crop_lims(vid, crop_thresh=40):
     y = np.arange(dims[0])
     x = np.arange(dims[1])
     
-    crop_thresh = 40
     for frame in vid:
         frame = np.array(frame)[:,:,0]
 
@@ -158,7 +161,7 @@ def save_to_avi(vid, fps, filename):
     
     total_frames, height, width = vid.shape
     container = av.open(filename, 'w')
-    stream = container.add_stream('rawvideo', rate=fps) # example vid from miniscopy uses palettize codec
+    stream = container.add_stream('rawvideo', rate=fps)
     stream.height = height
     stream.width = width
     stream.pix_fmt = 'bgr24'
