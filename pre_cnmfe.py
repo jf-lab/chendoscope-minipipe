@@ -41,7 +41,7 @@ def process_chunk(filename, start, stop, reference, save_name, xlims = None, yli
     '''
     chunk = stop/(stop-start)
     video = pims.ImageIOReader(filename)
-    frame_rate = fps,  # video.frame_rate
+    frame_rate = fps  # video.frame_rate
     video_chunk = video[start:stop]
     print("Processing frames {} to {} of {}".format(start, stop, len(video)))
 
