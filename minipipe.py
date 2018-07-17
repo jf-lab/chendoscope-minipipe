@@ -127,39 +127,49 @@ if __name__ == '__main__':
             stops = starts+args.chunk_size
             frames = list(zip(starts, stops))
             print(args.cores)
+
             Parallel(n_jobs=args.cores)(delayed(process_chunk)(filename=filename, start=start, stop=stop, reference=reference, save_name=save_name, format=args.format, ds_factor=args.downsample, correct_motion=args.correct_motion, thresh=args.threshold, clean_pixels=args.remove_dead_pixels, pixel_thresh=args.pixel_thresh) for start, stop in frames)
+
             if args.format == 'tiff':
                 if args.bigtiff:
                     system("tiffcp -8 {}/*_temp_*.tiff {}.tiff".format(directory, save_name))
                 else:
                     system("tiffcp {}/*_temp_*.tiff {}.tiff".format(directory, save_name))
-                system("rm {}/*_temp_*.tiff".format(directory))
 
             elif args.format == 'avi':
                 system("avimerge -o {}.avi -i {}/*_temp_*.avi".format(save_name, directory))
-                system("rm {}/*_temp_*".format(directory))
 
             elif args.format == 'hdf5':
-                tdim, xdim, ydim = vid.shape
-
+                tdim, xdim, ydim = len(vid)/args.downsample, vid[0].shape[0], vid[0].shape[1]
                 files = glob(directory + "/*_temp_*")
-                full_mov = hd.File(save_name + '.hdf5')
-                movie = full_mov.create_dataset('movie', shape=(tdim, xdim*ydim), chunks=True)
+                filename_new = save_name + '.hdf5'
+                if path.exists(filename_new):
+                    system('rm %s'%filename_new)
+                full_mov = hd.File(filename_new)
 
+                movie = full_mov.create_dataset('movie', shape=(tdim, xdim*ydim), chunks=True)
                 full_mov.attrs['folder'] = directory
-                full_mov.attrs['filename'] = os.path.basename(savename)
+                full_mov.attrs['filename'] = path.basename(save_name)
 
                 full_mov['movie'].attrs['duration'] = tdim
-                ful_mov['movie'].attrs['dims'] = (xdim, ydim)
+                full_mov['movie'].attrs['dims'] = (xdim, ydim)
 
+                # account for new vid sizes given downsampling
+                start = 0
                 for ix, f in enumerate(files):
                     chunk = hd.File(f)
                     chunk_mov = chunk['movie']
-                    start, stop = frames[ix]
-                    movie[start:stop] = chunk_mov[:]
+                    stop = start + len(chunk_mov)
+
+                    full_mov['movie'][start:stop] = chunk_mov[:]
+
 
                     #remove from memory, read from file again
                     full_mov.flush()
                     chunk.close()
+                    start = stop
+
 
                 full_mov.close()
+
+            system("rm {}/*_temp_*".format(directory))

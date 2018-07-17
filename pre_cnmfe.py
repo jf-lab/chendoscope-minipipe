@@ -7,6 +7,7 @@ Pre-cnmf-e processing of videos in chunks:
 - Motion Correction
 
 '''
+from os import path, system
 import pims
 import av
 import numpy as np
@@ -127,12 +128,12 @@ def save_to_hdf(Y, filename):
     # Y is a numpy array of dimensions (T_dim, x_dim, y_dim)
     # FramesxHxW
 
-    dirname = os.path.dirname(filename)
-    basename = os.path.basename(filename)
-    filename_new = os.path.splitext(filename)[0] + '.hdf5'
+    dirname = path.dirname(filename)
+    basename = path.basename(filename)
+    filename_new = path.splitext(filename)[0] + '.hdf5'
 
-    if os.path.exists(filename_new):
-        os.system('rm %s'%filename_new)
+    if path.exists(filename_new):
+        system('rm %s'%filename_new)
 
     file = hd.File(filename_new)
 
