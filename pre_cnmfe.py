@@ -17,6 +17,7 @@ from motion import align_video
 import skimage.io
 import skimage.filters
 from skimage.morphology import square
+import h5py as hd
 
 
 def process_chunk(filename, start, stop, reference, save_name, ds_factor=4, correct_motion=True, thresh=1.8, cutoff=0.05, clean_pixels=False, pixel_thresh=1.1, format='tiff'):
@@ -32,6 +33,7 @@ def process_chunk(filename, start, stop, reference, save_name, ds_factor=4, corr
         - correct_motion: bool, correct motion, default=True
         - thresh: flt, threshold for motion correction, default=1.0
         - cutoff: flt, cutoff for motion correction, default=0.05
+        - format: str, format to save chunk as (tiff, avi, hdf5), default='tiff'
     Output:
         - None, saves processed chunk as .tiff or .avi
     '''
@@ -51,11 +53,13 @@ def process_chunk(filename, start, stop, reference, save_name, ds_factor=4, corr
 
     if correct_motion:
         video_chunk_ds = align_video(video_chunk_ds, reference, thresh, cutoff)
-    
+
     if format == 'tiff':
         skimage.io.imsave(save_name + '_temp_{}.tiff'.format(chunk), img_as_uint(video_chunk_ds/2**16))
     elif format == 'avi':
         save_to_avi(video_chunk_ds, fps = frame_rate / ds_factor, filename = save_name + '_temp_{}.avi'.format(chunk))
+    elif format == 'hdf5':
+        save_to_hdf(video_chunk_ds, filename = save_name + '_temp_{}.hdf5'.format(chunk))
 
 
 def downsample(vid, ds_factor):
@@ -91,27 +95,56 @@ def remove_dead_pixels(vid, thresh=1.1):
         img[img>thresh*med] = med[img>thresh*med]
         vid[frame, :, :] = img.reshape(vid.shape[1], vid.shape[2])
 
+
 def save_to_avi(vid, fps, filename):
-    
+
     total_frames, height, width = vid.shape
     container = av.open(filename, 'w')
     stream = container.add_stream('mpeg4', rate=fps) # example vid from miniscopy uses palettize codec
     stream.height = height
     stream.width = width
-    
+
     for frame in vid:
         # Convert frame to RGB uint8 values
         frame = frame.astype('uint8')
         frame = np.repeat(np.reshape(frame, newshape=(frame.shape[0], frame.shape[1], 1)), repeats=3, axis=2)
-        
+
         # Encode frame into stream
         frame = av.VideoFrame.from_ndarray(frame, format='rgb24')
         for packet in stream.encode(frame):
             container.mux(packet)
-    
+
     # Flush Stream
     for packet in stream.encode():
         container.mux(packet)
 
     # Close file
     container.close()
+
+
+def save_to_hdf(Y, filename):
+    # Author: Luke Prince
+    # Y is a numpy array of dimensions (T_dim, x_dim, y_dim)
+    # FramesxHxW
+
+    dirname = os.path.dirname(filename)
+    basename = os.path.basename(filename)
+    filename_new = os.path.splitext(filename)[0] + '.hdf5'
+
+    if os.path.exists(filename_new):
+        os.system('rm %s'%filename_new)
+
+    file = hd.File(filename_new)
+
+    tdim, xdim, ydim = Y.shape
+    movie = file.create_dataset('movie', shape = (tdim, xdim*ydim), chunks = True)
+
+    file.attrs['folder'] = dirname
+    file.attrs['filename'] = basename
+
+    file['movie'].attrs['duration'] = tdim
+    file['movie'].attrs['dims'] = (xdim, ydim)
+
+    movie[:] = Y.reshape((tdim, xdim*ydim))
+
+    return file
