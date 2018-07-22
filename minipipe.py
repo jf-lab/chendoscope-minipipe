@@ -147,21 +147,21 @@ if __name__ == '__main__':
                     system('rm %s'%filename_new)
                 full_mov = hd.File(filename_new)
 
-                movie = full_mov.create_dataset('movie', shape=(tdim, xdim*ydim), chunks=True)
+                movie = full_mov.create_dataset('original', shape=(tdim, xdim*ydim), chunks=True)
                 full_mov.attrs['folder'] = directory
                 full_mov.attrs['filename'] = path.basename(save_name)
 
-                full_mov['movie'].attrs['duration'] = tdim
-                full_mov['movie'].attrs['dims'] = (xdim, ydim)
+                full_mov['original'].attrs['duration'] = tdim
+                full_mov['original'].attrs['dims'] = (xdim, ydim)
 
                 # account for new vid sizes given downsampling
                 start = 0
                 for ix, f in enumerate(files):
                     chunk = hd.File(f)
-                    chunk_mov = chunk['movie']
+                    chunk_mov = chunk['original]
                     stop = start + len(chunk_mov)
 
-                    full_mov['movie'][start:stop] = chunk_mov[:]
+                    full_mov['original'][start:stop] = chunk_mov[:]
 
 
                     #remove from memory, read from file again

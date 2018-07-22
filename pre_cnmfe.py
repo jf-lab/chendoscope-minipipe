@@ -138,13 +138,13 @@ def save_to_hdf(Y, filename):
     file = hd.File(filename_new)
 
     tdim, xdim, ydim = Y.shape
-    movie = file.create_dataset('movie', shape = (tdim, xdim*ydim), chunks = True)
+    movie = file.create_dataset('original', shape = (tdim, xdim*ydim), chunks = True)
 
     file.attrs['folder'] = dirname
     file.attrs['filename'] = basename
 
-    file['movie'].attrs['duration'] = tdim
-    file['movie'].attrs['dims'] = (xdim, ydim)
+    file['original'].attrs['duration'] = tdim
+    file['original'].attrs['dims'] = (xdim, ydim)
 
     movie[:] = Y.reshape((tdim, xdim*ydim))
 
