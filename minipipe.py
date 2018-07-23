@@ -158,7 +158,7 @@ if __name__ == '__main__':
                 start = 0
                 for ix, f in enumerate(files):
                     chunk = hd.File(f)
-                    chunk_mov = chunk['original]
+                    chunk_mov = chunk['original']
                     stop = start + len(chunk_mov)
 
                     full_mov['original'][start:stop] = chunk_mov[:]
