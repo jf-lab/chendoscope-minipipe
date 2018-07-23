@@ -42,7 +42,7 @@ Flags:
 '''
 
 
-from pre_cnmfe import process_chunk
+from pre_cnmfe import process_chunk, get_crop_lims
 import argparse
 import pims
 import numpy as np
@@ -55,6 +55,7 @@ from glob import glob
 def get_args():
     parser = argparse.ArgumentParser(description='Convert and downsample .mkv files to .tiff')
     parser.add_argument('input', help='files', nargs='+')
+    parser.add_argument('--fps', dest = 'fps', help='Frames per second', default=20)
     parser.add_argument('-d', '--downsample', help='downsample factor, default is 4', type=int, default=4)
     parser.add_argument('-c', '--chunk_size', help='chunk_size of frames, default is 2000', type=int, default=2000)
     parser.add_argument('--motion_corr', dest='correct_motion', help='motion correct the given video', action='store_true')
@@ -69,6 +70,9 @@ def get_args():
     parser.add_argument('-o', '--output', help='if --merge, name of merged file', type=str)
     parser.add_argument('-f', '--format', help='format of output file : tiff, avi or hdf5', type=str, default='tiff')
     parser.add_argument('--cores', help='cores to use, default is 1', type=int, default=4)
+    parser.add_argument('--crop', dest='crop', action='store_true')
+    parser.add_argument('-ct', '--crop_thresh', dest='crop_thresh', type=int, default=40)
+    parser.set_defaults(crop=False)
     parser.add_argument('--remove_dead_pixels', action='store_true')
     parser.set_defaults(remove_dead_pixels=False)
     parser.add_argument('-p', '--pixel_thresh', type=float, default=1.1)
@@ -120,6 +124,12 @@ if __name__ == '__main__':
             reference = np.round(np.mean(np.array(vid[args.target_frame:args.downsample])[:,:,:,0], axis=0))
             save_name = filename.replace('.mkv', '_proc')
 
+            if args.crop:
+                xlims, ylims = get_crop_lims(vid, crop_thresh=args.crop_thresh)
+            else:
+                xlims = None
+                ylims = None
+
             if len(vid) % args.chunk_size < 10:
                 args.chunk_size += 5
 
@@ -128,7 +138,7 @@ if __name__ == '__main__':
             frames = list(zip(starts, stops))
             print(args.cores)
 
-            Parallel(n_jobs=args.cores)(delayed(process_chunk)(filename=filename, start=start, stop=stop, reference=reference, save_name=save_name, format=args.format, ds_factor=args.downsample, correct_motion=args.correct_motion, thresh=args.threshold, clean_pixels=args.remove_dead_pixels, pixel_thresh=args.pixel_thresh) for start, stop in frames)
+            Parallel(n_jobs=args.cores)(delayed(process_chunk)(filename=filename, start=start, stop=stop, xlims=xlims, ylims=ylims, fps=args.fps, reference=reference, save_name=save_name, format=args.format, ds_factor=args.downsample, correct_motion=args.correct_motion, thresh=args.threshold, clean_pixels=args.remove_dead_pixels, pixel_thresh=args.pixel_thresh) for start, stop in frames)
 
             if args.format == 'tiff':
                 if args.bigtiff:
