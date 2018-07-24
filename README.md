@@ -1,6 +1,6 @@
-# JF Lab Pipeline for CHEndoscope Analysis 
+# JF Lab Pipeline for CHEndoscope Analysis
 
-The JF-Lab pipeline for preprocessing and analysis of CHEndoscope calcium imaging data. 
+The JF-Lab pipeline for preprocessing and analysis of CHEndoscope calcium imaging data.
 
 1. Get your .mkv files to be merged, downsampled and/or motion corrected.
 2. Run the following on the .mkv files:  
@@ -15,8 +15,8 @@ The JF-Lab pipeline for preprocessing and analysis of CHEndoscope calcium imagin
   --bigtiff: If .mkv(s) amount to > 12Gb, must use this mode or memory error will occur  
   --merge: merge all the files instead of individually processing them  
   -o/--output: If --merge, then the name for the merged .tiff file  
-  -f/--format: output format as tiff or avi, default is tiffs
+  -f/--format: output format as tiff, avi or hdf5, default is tiffs
 3. Run [CNMF-E](https://github.com/zhoupc/CNMF_E) on the .tiff files, output is a .mat file.  
 4. Use review_traces.py to manually inspect the neurons to keep or exclude from analysis:  
   `python review_traces.py traces.mat`
-  - Press 'k' to keep, 'j' to exclude, or the 'keep'/'exclude' buttons. 
+  - Press 'k' to keep, 'j' to exclude, or the 'keep'/'exclude' buttons.

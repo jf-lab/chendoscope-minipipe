@@ -14,13 +14,13 @@ mkvmerge
 tiffcp
     install tiffcp using:
     $ sudo apt-get install libtiff-tools
-    
+
 avimerge
     install avimerge via transcode:
     $ sudo apt-get install transcode
 
 dependencies for av
-    $ sudo apt-get install libavformat-dev libavcodec-dev libavdevice-dev libavutil-dev \ 
+    $ sudo apt-get install libavformat-dev libavcodec-dev libavdevice-dev libavutil-dev \
     libswscale-dev libavresample-dev libavfilter-dev
 
 
@@ -48,6 +48,8 @@ import pims
 import numpy as np
 from os import system, path
 from joblib import Parallel, delayed
+import h5py as hd
+from glob import glob
 
 
 def get_args():
@@ -66,7 +68,7 @@ def get_args():
     parser.add_argument('--merge', dest='merge', help='merge input files instead of serially processing', action='store_true')
     parser.set_defaults(merge=False)
     parser.add_argument('-o', '--output', help='if --merge, name of merged file', type=str)
-    parser.add_argument('-f', '--format', help='format of output file : tiff or avi', type=str, default='tiff')
+    parser.add_argument('-f', '--format', help='format of output file : tiff, avi or hdf5', type=str, default='tiff')
     parser.add_argument('--cores', help='cores to use, default is 1', type=int, default=4)
     parser.add_argument('--crop', dest='crop', action='store_true')
     parser.add_argument('-ct', '--crop_thresh', dest='crop_thresh', type=int, default=40)
@@ -97,7 +99,7 @@ if __name__ == '__main__':
 
         if len(vid) % args.chunk_size < 10:
             args.chunk_size += 5
-            
+
         starts = np.arange(0,len(vid),args.chunk_size)
         stops = starts+args.chunk_size
         frames = list(zip(starts, stops))
@@ -109,10 +111,11 @@ if __name__ == '__main__':
             else:
                 system("tiffcp {}/*_temp_* {}.tiff".format(directory, save_name))
             system("rm {}/*_temp_*".format(directory))
-        
+
         elif args.format == 'avi':
             system("avimerge -o {}.avi -i {}/*_temp_*.avi".format(save_name, directory))
             system("rm {}/*_temp_*".format(directory))
+
     else:
         for filename in args.input:
             print("Processing {}".format(filename))
@@ -120,7 +123,7 @@ if __name__ == '__main__':
             vid = pims.ImageIOReader(filename)
             reference = np.round(np.mean(np.array(vid[args.target_frame:args.downsample])[:,:,:,0], axis=0))
             save_name = filename.replace('.mkv', '_proc')
-            
+
             if args.crop:
                 xlims, ylims = get_crop_lims(vid, crop_thresh=args.crop_thresh)
             else:
@@ -142,8 +145,41 @@ if __name__ == '__main__':
                     system("tiffcp -8 {}/*_temp_*.tiff {}.tiff".format(directory, save_name))
                 else:
                     system("tiffcp {}/*_temp_*.tiff {}.tiff".format(directory, save_name))
-                system("rm {}/*_temp_*.tiff".format(directory))
-            
+
             elif args.format == 'avi':
                 system("avimerge -o {}.avi -i {}/*_temp_*.avi".format(save_name, directory))
-                system("rm {}/*_temp_*".format(directory))
+
+            elif args.format == 'hdf5':
+                tdim, xdim, ydim = len(vid)/args.downsample, vid[0].shape[0], vid[0].shape[1]
+                files = glob(directory + "/*_temp_*")
+                filename_new = save_name + '.hdf5'
+                if path.exists(filename_new):
+                    system('rm %s'%filename_new)
+                full_mov = hd.File(filename_new)
+
+                movie = full_mov.create_dataset('original', shape=(tdim, xdim*ydim), chunks=True)
+                full_mov.attrs['folder'] = directory
+                full_mov.attrs['filename'] = path.basename(save_name)
+
+                full_mov['original'].attrs['duration'] = tdim
+                full_mov['original'].attrs['dims'] = (xdim, ydim)
+
+                # account for new vid sizes given downsampling
+                start = 0
+                for ix, f in enumerate(files):
+                    chunk = hd.File(f)
+                    chunk_mov = chunk['original']
+                    stop = start + len(chunk_mov)
+
+                    full_mov['original'][start:stop] = chunk_mov[:]
+
+
+                    #remove from memory, read from file again
+                    full_mov.flush()
+                    chunk.close()
+                    start = stop
+
+
+                full_mov.close()
+
+            system("rm {}/*_temp_*".format(directory))

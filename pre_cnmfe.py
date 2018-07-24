@@ -7,6 +7,7 @@ Pre-cnmf-e processing of videos in chunks:
 - Motion Correction
 
 '''
+from os import path, system
 import pims
 import av
 import numpy as np
@@ -17,6 +18,7 @@ from motion import align_video
 import skimage.io
 import skimage.filters
 from skimage.morphology import square
+import h5py as hd
 
 
 def process_chunk(filename, start, stop, reference, save_name, xlims = None, ylims = None, fps= 20, ds_factor=4, correct_motion=True, thresh=1.8, cutoff=0.05, clean_pixels=False, pixel_thresh=1.1, format='tiff'):
@@ -35,7 +37,7 @@ def process_chunk(filename, start, stop, reference, save_name, xlims = None, yli
         - correct_motion: bool, correct motion, default=True
         - thresh: flt, threshold for motion correction, default=1.0
         - cutoff: flt, cutoff for motion correction, default=0.05
-        - format: string, 'tiff' or 'avi'
+        - format: str, format to save chunk as (tiff, avi, hdf5), default='tiff'
     Output:
         - None, saves processed chunk as .tiff or .avi
     '''
@@ -55,16 +57,18 @@ def process_chunk(filename, start, stop, reference, save_name, xlims = None, yli
 
     if correct_motion:
         video_chunk_ds = align_video(video_chunk_ds, reference, thresh, cutoff)
-    
+
     if format == 'tiff':
         skimage.io.imsave(save_name + '_temp_{}.tiff'.format(chunk), img_as_uint(video_chunk_ds/2**16))
     elif format == 'avi':
         save_to_avi(video_chunk_ds, fps = frame_rate / ds_factor, filename = save_name + '_temp_{}.avi'.format(chunk))
+    elif format == 'hdf5':
+        save_to_hdf(video_chunk_ds, filename = save_name + '_temp_{}.hdf5'.format(chunk))
 
 def downsample(vid, ds_factor, xlims=None, ylims=None):
     '''
     Downsample video by ds_factor.
-    
+
     If xlims and ylims are not None, crop video to these limits also
 
     Input:
@@ -72,25 +76,25 @@ def downsample(vid, ds_factor, xlims=None, ylims=None):
         - ds_factor: int, downsample factor
         - xlims (optional): tuple of ints, x-index of crop limits
         - ylims (optional): tuple of ints: y-index of crop limits
-        
+
     Output:
         - vid_ds: numpy array, downsampled video
     '''
     dims = vid[0].shape
-    
+
     if xlims is not None:
         xs, xe = xlims
     else:
         xs = 0
         xe = dims[1] - 1
-    
+
     if ylims is not None:
         ys, ye = ylims
     else:
         ys = 0
         ye = dims[0] - 1
-        
-    
+
+
     dims = vid[0].shape
     vid_ds = np.zeros((int(len(vid)/ds_factor), ye-ys, xe-xs))
 
@@ -109,7 +113,7 @@ def downsample(vid, ds_factor, xlims=None, ylims=None):
 def get_crop_lims(vid, crop_thresh=40):
     '''
     Find x,y limits where the mean fluorescence is always above a defined threshold value
-    
+
     Input:
         - vid: numpy array, video
         - crop_thresh: int, fluorescence threshold to find x,y limits to crop to
@@ -125,7 +129,7 @@ def get_crop_lims(vid, crop_thresh=40):
 
     y = np.arange(dims[0])
     x = np.arange(dims[1])
-    
+
     for frame in vid:
         frame = np.array(frame)[:,:,0]
 
@@ -146,7 +150,7 @@ def get_crop_lims(vid, crop_thresh=40):
 
         if y_thresh[-1] > ye:
             ye = y_thresh[-1]
-            
+
         return (xs, xe), (ys, ye)
 
 
@@ -157,29 +161,58 @@ def remove_dead_pixels(vid, thresh=1.1):
         img[img>thresh*med] = med[img>thresh*med]
         vid[frame, :, :] = img.reshape(vid.shape[1], vid.shape[2])
 
+
 def save_to_avi(vid, fps, filename):
-    
+
     total_frames, height, width = vid.shape
     container = av.open(filename, 'w')
     stream = container.add_stream('rawvideo', rate=fps)
     stream.height = height
     stream.width = width
     stream.pix_fmt = 'bgr24'
-    
+
     for frame in vid:
         # Convert frame to RGB uint8 values
         frame = frame.astype('uint8')
         frame = np.repeat(np.reshape(frame, newshape=(frame.shape[0], frame.shape[1], 1)), repeats=3, axis=2)
-        
+
         # Encode frame into stream
 
         frame = av.VideoFrame.from_ndarray(frame, format='bgr24')
         for packet in stream.encode(frame):
             container.mux(packet)
-    
+
     # Flush Stream
     for packet in stream.encode():
         container.mux(packet)
 
     # Close file
     container.close()
+
+
+def save_to_hdf(Y, filename):
+    # Author: Luke Prince
+    # Y is a numpy array of dimensions (T_dim, x_dim, y_dim)
+    # FramesxHxW
+
+    dirname = path.dirname(filename)
+    basename = path.basename(filename)
+    filename_new = path.splitext(filename)[0] + '.hdf5'
+
+    if path.exists(filename_new):
+        system('rm %s'%filename_new)
+
+    file = hd.File(filename_new)
+
+    tdim, xdim, ydim = Y.shape
+    movie = file.create_dataset('original', shape = (tdim, xdim*ydim), chunks = True)
+
+    file.attrs['folder'] = dirname
+    file.attrs['filename'] = basename
+
+    file['original'].attrs['duration'] = tdim
+    file['original'].attrs['dims'] = (xdim, ydim)
+
+    movie[:] = Y.reshape((tdim, xdim*ydim))
+
+    return file
