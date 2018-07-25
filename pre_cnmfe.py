@@ -192,7 +192,7 @@ def save_to_avi(vid, fps, filename):
 
 def save_to_hdf(Y, filename):
     # Author: Luke Prince
-    # Y is a numpy array of dimensions (T_dim, x_dim, y_dim)
+    # Y is a numpy array of dimensions (T_dim, y_dim, x_dim)
     # FramesxHxW
 
     dirname = path.dirname(filename)
@@ -211,7 +211,7 @@ def save_to_hdf(Y, filename):
     file.attrs['filename'] = basename
 
     file['original'].attrs['duration'] = tdim
-    file['original'].attrs['dims'] = (xdim, ydim)
+    file['original'].attrs['dims'] = (ydim, xdim) # 2D np.arrays are (row X cols) --> (ydim X xdim) 
 
     movie[:] = Y.reshape((tdim, xdim*ydim))
 

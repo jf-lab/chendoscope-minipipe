@@ -167,7 +167,7 @@ if __name__ == '__main__':
                 full_mov.attrs['filename'] = path.basename(save_name)
 
                 full_mov['original'].attrs['duration'] = int(tdim)
-                full_mov['original'].attrs['dims'] = (xdim, ydim)
+                full_mov['original'].attrs['dims'] = (ydim, xdim) # 2D np.arrays are (row X cols) --> (ydim X xdim) 
 
                 # account for new vid sizes given downsampling
                 start = 0
