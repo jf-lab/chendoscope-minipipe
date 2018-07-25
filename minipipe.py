@@ -166,7 +166,7 @@ if __name__ == '__main__':
                 full_mov.attrs['folder'] = directory
                 full_mov.attrs['filename'] = path.basename(save_name)
 
-                full_mov['original'].attrs['duration'] = tdim
+                full_mov['original'].attrs['duration'] = int(tdim)
                 full_mov['original'].attrs['dims'] = (xdim, ydim)
 
                 # account for new vid sizes given downsampling
