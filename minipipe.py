@@ -150,7 +150,12 @@ if __name__ == '__main__':
                 system("avimerge -o {}.avi -i {}/*_temp_*.avi".format(save_name, directory))
 
             elif args.format == 'hdf5':
-                tdim, xdim, ydim = len(vid)/args.downsample, vid[0].shape[0], vid[0].shape[1]
+                if args.crop:
+                    tdim = len(vid)/args.downsample
+                    xdim = xlims[1]- xlims[0]
+                    ydim = ylims[1]- ylims[0]
+                else:
+                    tdim, xdim, ydim = len(vid)/args.downsample, vid[0].shape[0], vid[0].shape[1]
                 files = glob(directory + "/*_temp_*")
                 filename_new = save_name + '.hdf5'
                 if path.exists(filename_new):
@@ -161,8 +166,8 @@ if __name__ == '__main__':
                 full_mov.attrs['folder'] = directory
                 full_mov.attrs['filename'] = path.basename(save_name)
 
-                full_mov['original'].attrs['duration'] = tdim
-                full_mov['original'].attrs['dims'] = (xdim, ydim)
+                full_mov['original'].attrs['duration'] = int(tdim)
+                full_mov['original'].attrs['dims'] = (ydim, xdim) # 2D np.arrays are (row X cols) --> (ydim X xdim) 
 
                 # account for new vid sizes given downsampling
                 start = 0
